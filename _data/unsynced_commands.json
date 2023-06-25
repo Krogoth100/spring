@@ -209,11 +209,23 @@
       "command" : "DebugPath",
       "description" : "Enable/Disable drawing of pathfinder debug-data"
    },
+   "debugshadowfrustum" : {
+      "arguments" : {},
+      "cheatRequired" : false,
+      "command" : "DebugShadowFrustum",
+      "description" : "Enable/Disable drawing of shadow frustum shape"
+   },
    "debugtraceray" : {
       "arguments" : {},
       "cheatRequired" : false,
       "command" : "DebugTraceRay",
       "description" : "Enable/Disable drawing of traceray debug-data"
+   },
+   "debugvisibility" : {
+      "arguments" : {},
+      "cheatRequired" : false,
+      "command" : "DebugVisibility",
+      "description" : "Enable/Disable drawing of visible terrain"
    },
    "decguiopacity" : {
       "arguments" : {},
@@ -238,12 +250,6 @@
       "cheatRequired" : true,
       "command" : "Destroy",
       "description" : "Destroys one or multiple units by unit-ID, instantly"
-   },
-   "desync" : {
-      "arguments" : {},
-      "cheatRequired" : false,
-      "command" : "Desync",
-      "description" : "Redirects command /Desync to its synced processor"
    },
    "disticon" : {
       "arguments" : {},

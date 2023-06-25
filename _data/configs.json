@@ -1,7 +1,7 @@
 {
   "AdvMapShading": {
     "declarationFile": "/spring/rts/Map/SMF/SMFGroundDrawer.cpp",
-    "declarationLine": 43,
+    "declarationLine": 45,
     "description": "Enable shaders for terrain rendering.",
     "defaultValue": 1,
     "safemodeValue": 0,
@@ -24,7 +24,8 @@
   },
   "AllowDeferredMapRendering": {
     "declarationFile": "/spring/rts/Map/SMF/SMFGroundDrawer.cpp",
-    "declarationLine": 44,
+    "declarationLine": 46,
+    "description": "Enable rendering the map to the map deferred buffers.",
     "defaultValue": 0,
     "safemodeValue": 0,
     "type": "bool"
@@ -39,31 +40,36 @@
   "AllowDeferredModelRendering": {
     "declarationFile": "/spring/rts/Rendering/LuaObjectDrawer.cpp",
     "declarationLine": 31,
+    "description": "Allows the rendering of model deferred buffers.",
     "defaultValue": 0,
     "safemodeValue": 0,
     "type": "bool"
   },
   "AllowDrawMapDeferredEvents": {
     "declarationFile": "/spring/rts/Map/SMF/SMFGroundDrawer.cpp",
-    "declarationLine": 46,
+    "declarationLine": 48,
+    "description": "Enable DrawMapDeferred Lua callins.",
     "defaultValue": 0,
     "type": "bool"
   },
   "AllowDrawMapPostDeferredEvents": {
     "declarationFile": "/spring/rts/Map/SMF/SMFGroundDrawer.cpp",
-    "declarationLine": 45,
+    "declarationLine": 47,
+    "description": "Enable DrawMapPostDeferred Lua callins.",
     "defaultValue": 0,
     "type": "bool"
   },
   "AllowDrawModelPostDeferredEvents": {
     "declarationFile": "/spring/rts/Rendering/LuaObjectDrawer.cpp",
     "declarationLine": 33,
+    "description": "Enable DrawModelPostDeferred Lua callins.",
     "defaultValue": 1,
     "type": "bool"
   },
   "AllowMultiSampledFrameBuffers": {
     "declarationFile": "/spring/rts/Rendering/LuaObjectDrawer.cpp",
     "declarationLine": 34,
+    "description": "Enable FBOs that can have multisampled anti-aliasing.",
     "defaultValue": 0,
     "type": "bool"
   },
@@ -77,7 +83,7 @@
   },
   "AlwaysSendDrawGroundEvents": {
     "declarationFile": "/spring/rts/Map/SMF/SMFGroundDrawer.cpp",
-    "declarationLine": 55,
+    "declarationLine": 57,
     "description": "Always send DrawGround{Pre,Post}{Forward,Deferred} events",
     "defaultValue": 0,
     "type": "bool"
@@ -120,6 +126,7 @@
   "AutohostPort": {
     "declarationFile": "/spring/rts/Net/GameServer.cpp",
     "declarationLine": 69,
+    "description": "Which port should the engine listen on for Autohost interfact connections.",
     "defaultValue": 0,
     "type": "int"
   },
@@ -460,12 +467,14 @@
   "CubeTexGenerateMipMaps": {
     "declarationFile": "/spring/rts/Rendering/Env/CubeMapHandler.cpp",
     "declarationLine": 21,
+    "description": "Generate mipmaps for the reflection and specular cubemap textures, useful for efficient subsampling and blurring.",
     "defaultValue": 0,
     "type": "bool"
   },
   "CubeTexSizeReflection": {
     "declarationFile": "/spring/rts/Rendering/Env/CubeMapHandler.cpp",
     "declarationLine": 20,
+    "description": "The square resolution of each face of the environment reflection cubemap.",
     "defaultValue": 128,
     "minimumValue": 1,
     "type": "int"
@@ -473,6 +482,7 @@
   "CubeTexSizeSpecular": {
     "declarationFile": "/spring/rts/Rendering/Env/CubeMapHandler.cpp",
     "declarationLine": 19,
+    "description": "The square resolution of each face of the specular cubemap.",
     "defaultValue": 128,
     "minimumValue": 1,
     "type": "int"
@@ -500,7 +510,7 @@
   },
   "DefaultStartScript": {
     "declarationFile": "/spring/rts/System/SpringApp.cpp",
-    "declarationLine": 112,
+    "declarationLine": 114,
     "description": "filename of script.txt to use when no command line parameters are specified.",
     "defaultValue": "",
     "type": "std::string"
@@ -508,6 +518,7 @@
   "DemoFromDemo": {
     "declarationFile": "/spring/rts/Game/PreGame.cpp",
     "declarationLine": 60,
+    "description": "Enable recording a demo while playing back a demo.",
     "defaultValue": 0,
     "type": "bool"
   },
@@ -535,7 +546,7 @@
   },
   "DualScreenMiniMapAspectRatio": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 71,
+    "declarationLine": 73,
     "description": "Whether minimap preserves aspect ratio on dual screen mode.",
     "defaultValue": 1,
     "type": "bool"
@@ -557,6 +568,7 @@
   "DumpGameStateOnDesync": {
     "declarationFile": "/spring/rts/System/GlobalConfig.cpp",
     "declarationLine": 63,
+    "description": "Enable writing clientgamestate and servergamestate dumps when a desync is detected",
     "defaultValue": 0,
     "type": "bool"
   },
@@ -785,7 +797,7 @@
   },
   "GroundDetail": {
     "declarationFile": "/spring/rts/Map/SMF/SMFGroundDrawer.cpp",
-    "declarationLine": 30,
+    "declarationLine": 32,
     "description": "Controls how detailed the map geometry will be. On lowered settings, cliffs may appear to be jagged or \"melting\".",
     "defaultValue": 60,
     "minimumValue": 4,
@@ -815,13 +827,14 @@
   },
   "GroundNormalTextureHighPrecision": {
     "declarationFile": "/spring/rts/Map/SMF/SMFReadMap.cpp",
-    "declarationLine": 35,
-    "defaultValue": 0,
+    "declarationLine": 37,
+    "deprecated": 1,
     "type": "bool"
   },
   "GroundScarAlphaFade": {
     "declarationFile": "/spring/rts/Rendering/Env/Decals/GroundDecalHandler.cpp",
     "declarationLine": 55,
+    "description": "How fast ground scars like explosion scars and tracks fade out.",
     "defaultValue": 0,
     "type": "int"
   },
@@ -853,6 +866,7 @@
   "HighResInfoTexture": {
     "declarationFile": "/spring/rts/Rendering/Map/InfoTexture/Modern/Combiner.cpp",
     "declarationLine": 14,
+    "description": "Use full heightmap resolution info texture (true), or half resolution (false)",
     "defaultValue": 1,
     "type": "bool"
   },
@@ -896,6 +910,7 @@
   "InitialNetworkTimeout": {
     "declarationFile": "/spring/rts/System/GlobalConfig.cpp",
     "declarationLine": 15,
+    "description": "Time to wait for the initial connection to the game server.",
     "defaultValue": 30,
     "minimumValue": 10,
     "type": "int"
@@ -1057,6 +1072,7 @@
   "LuaGarbageCollectionMemLoadMult": {
     "declarationFile": "/spring/rts/Lua/LuaHandle.cpp",
     "declarationLine": 59,
+    "description": "How much the amount of Lua memory in use increases the rate of garbage collection.",
     "defaultValue": 1.33,
     "minimumValue": 1,
     "maximumValue": 100,
@@ -1065,7 +1081,7 @@
   "LuaGarbageCollectionRunTimeMult": {
     "declarationFile": "/spring/rts/Lua/LuaHandle.cpp",
     "declarationLine": 60,
-    "description": "in milliseconds",
+    "description": "How many milliseconds the garbage collected can run for in each GC cycle",
     "defaultValue": 5,
     "minimumValue": 1,
     "type": "float"
@@ -1103,14 +1119,15 @@
   },
   "MapBorder": {
     "declarationFile": "/spring/rts/Map/SMF/SMFGroundDrawer.cpp",
-    "declarationLine": 36,
+    "declarationLine": 38,
     "description": "Draws a solid border at the edges of the map.",
     "defaultValue": 1,
     "type": "bool"
   },
   "MaxDynamicMapLights": {
     "declarationFile": "/spring/rts/Map/SMF/SMFGroundDrawer.cpp",
-    "declarationLine": 39,
+    "declarationLine": 41,
+    "description": "Maximum number of map-global dynamic lights that will be rendered at once. High numbers of lights cost performance, as they affect every map fragment.",
     "defaultValue": 1,
     "minimumValue": 0,
     "type": "int"
@@ -1150,7 +1167,8 @@
   "MaxTextureAtlasSizeX": {
     "declarationFile": "/spring/rts/Rendering/Textures/TextureAtlas.cpp",
     "declarationLine": 22,
-    "defaultValue": 2048,
+    "description": "The max X size of the projectile and Lua texture atlasses",
+    "defaultValue": 4096,
     "minimumValue": 512,
     "maximumValue": 32768,
     "type": "int"
@@ -1158,7 +1176,8 @@
   "MaxTextureAtlasSizeY": {
     "declarationFile": "/spring/rts/Rendering/Textures/TextureAtlas.cpp",
     "declarationLine": 23,
-    "defaultValue": 2048,
+    "description": "The max Y size of the projectile and Lua texture atlasses",
+    "defaultValue": 4096,
     "minimumValue": 512,
     "maximumValue": 32768,
     "type": "int"
@@ -1183,9 +1202,23 @@
     "defaultValue": 0.01,
     "type": "float"
   },
+  "MinDrawFPS": {
+    "declarationFile": "/spring/rts/System/GlobalConfig.cpp",
+    "declarationLine": 66,
+    "description": "Defines how many frames per second should minimally be rendered. To reach this number we will delay simframes.",
+    "defaultValue": 2,
+    "type": "int"
+  },
+  "MinSimDrawBalance": {
+    "declarationFile": "/spring/rts/System/GlobalConfig.cpp",
+    "declarationLine": 65,
+    "description": "Percent of the time for simulation is minimum spend for drawing. E.g. if set to 0.15 then 15% of the total cpu time is exclusively reserved for drawing.",
+    "defaultValue": 0.15,
+    "type": "float"
+  },
   "MiniMapButtonSize": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 53,
+    "declarationLine": 55,
     "defaultValue": 16,
     "type": "int"
   },
@@ -1198,20 +1231,20 @@
   },
   "MiniMapCanFlip": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 73,
+    "declarationLine": 75,
     "description": "Whether minimap inverts coordinates when camera Y rotation is between 90 and 270 degrees.",
     "defaultValue": 0,
     "type": "bool"
   },
   "MiniMapCursorScale": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 60,
+    "declarationLine": 62,
     "defaultValue": -0.5,
     "type": "float"
   },
   "MiniMapDrawCommands": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 63,
+    "declarationLine": 65,
     "defaultValue": 1,
     "minimumValue": 0,
     "headlessValue": 0,
@@ -1219,26 +1252,26 @@
   },
   "MiniMapDrawProjectiles": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 65,
+    "declarationLine": 67,
     "defaultValue": 1,
     "headlessValue": 0,
     "type": "bool"
   },
   "MiniMapFullProxy": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 52,
+    "declarationLine": 54,
     "defaultValue": 1,
     "type": "bool"
   },
   "MiniMapGeometry": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 51,
+    "declarationLine": 53,
     "defaultValue": "2 2 200 200",
     "type": "std::string"
   },
   "MiniMapIcons": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 61,
+    "declarationLine": 63,
     "defaultValue": 1,
     "headlessValue": 0,
     "type": "bool"
@@ -1259,7 +1292,7 @@
   },
   "MiniMapRefreshRate": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 69,
+    "declarationLine": 71,
     "description": "The refresh rate of the async MiniMap texture. Needs MiniMapRenderToTexture to be true. Value of \"0\" autoselects between 10-60FPS.",
     "defaultValue": 0,
     "minimumValue": 0,
@@ -1267,7 +1300,7 @@
   },
   "MiniMapRenderToTexture": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 68,
+    "declarationLine": 70,
     "description": "Asynchronous render MiniMap to a texture independent of screen FPS.",
     "defaultValue": 1,
     "safemodeValue": 0,
@@ -1275,13 +1308,13 @@
   },
   "MiniMapUnitExp": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 59,
+    "declarationLine": 61,
     "defaultValue": 0.25,
     "type": "float"
   },
   "MiniMapUnitSize": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 55,
+    "declarationLine": 57,
     "defaultValue": 2.5,
     "minimumValue": 0,
     "type": "float"
@@ -1346,6 +1379,7 @@
   "NetworkTimeout": {
     "declarationFile": "/spring/rts/System/GlobalConfig.cpp",
     "declarationLine": 19,
+    "description": "Number of seconds before connection to game server is considered lost.",
     "defaultValue": 120,
     "minimumValue": 0,
     "type": "int"
@@ -1405,14 +1439,14 @@
   },
   "PreloadModels": {
     "declarationFile": "/spring/rts/Rendering/WorldDrawer.cpp",
-    "declarationLine": 53,
+    "declarationLine": 54,
     "description": "The engine will preload all models",
     "defaultValue": 1,
     "type": "bool"
   },
   "ROAM": {
     "declarationFile": "/spring/rts/Map/SMF/SMFGroundDrawer.cpp",
-    "declarationLine": 49,
+    "declarationLine": 51,
     "description": "Use ROAM for terrain mesh rendering: 0 to disable, 1=VBO mode to enable.",
     "defaultValue": 1,
     "minimumValue": 0,
@@ -1480,14 +1514,14 @@
   },
   "SMFTexAniso": {
     "declarationFile": "/spring/rts/Map/SMF/SMFReadMap.cpp",
-    "declarationLine": 36,
+    "declarationLine": 38,
     "defaultValue": 4,
     "minimumValue": 0,
     "type": "float"
   },
   "SSMFTexAniso": {
     "declarationFile": "/spring/rts/Map/SMF/SMFReadMap.cpp",
-    "declarationLine": 37,
+    "declarationLine": 39,
     "defaultValue": 4,
     "minimumValue": 0,
     "type": "float"
@@ -1528,13 +1562,13 @@
   "ServerSleepTime": {
     "declarationFile": "/spring/rts/Net/GameServer.cpp",
     "declarationLine": 70,
-    "description": "number of milliseconds to sleep per tick",
+    "description": "Number of milliseconds to sleep per tick for the server thread. Lower values have marginally higher CPU load, while high values can introduce additional latency.",
     "defaultValue": 5,
     "type": "int"
   },
   "SetCoreAffinity": {
     "declarationFile": "/spring/rts/System/SpringApp.cpp",
-    "declarationLine": 105,
+    "declarationLine": 107,
     "description": "Defines a bitmask indicating which CPU cores the main-thread should use.",
     "defaultValue": "0",
     "safemodeValue": "1",
@@ -1542,14 +1576,14 @@
   },
   "ShadowColorMode": {
     "declarationFile": "/spring/rts/Rendering/ShadowHandler.cpp",
-    "declarationLine": 34,
+    "declarationLine": 35,
     "description": "Whether the colorbuffer of shadowmap FBO is RGB vs greyscale(to conserve some VRAM)",
     "defaultValue": 1,
     "type": "bool"
   },
   "ShadowMapSize": {
     "declarationFile": "/spring/rts/Rendering/ShadowHandler.cpp",
-    "declarationLine": 32,
+    "declarationLine": 33,
     "description": "Sets the resolution of shadows. Higher numbers increase quality at the cost of performance.",
     "defaultValue": 2048,
     "minimumValue": 32,
@@ -1557,13 +1591,13 @@
   },
   "ShadowProjectionMode": {
     "declarationFile": "/spring/rts/Rendering/ShadowHandler.cpp",
-    "declarationLine": 33,
+    "declarationLine": 34,
     "defaultValue": 1,
     "type": "int"
   },
   "Shadows": {
     "declarationFile": "/spring/rts/Rendering/ShadowHandler.cpp",
-    "declarationLine": 31,
+    "declarationLine": 32,
     "description": "Sets whether shadows are rendered.\n-1:=forceoff, 0:=off, 1:=full, 2:=fast (skip terrain)",
     "defaultValue": 2,
     "minimumValue": -1,
@@ -1602,7 +1636,7 @@
   },
   "SimpleMiniMapColors": {
     "declarationFile": "/spring/rts/Game/UI/MiniMap.cpp",
-    "declarationLine": 66,
+    "declarationLine": 68,
     "defaultValue": 0,
     "type": "bool"
   },
@@ -1644,7 +1678,7 @@
   },
   "SoftParticles": {
     "declarationFile": "/spring/rts/Rendering/Env/Particles/ProjectileDrawer.cpp",
-    "declarationLine": 44,
+    "declarationLine": 41,
     "description": "Soften up CEG particles on clipping edges",
     "defaultValue": 1,
     "safemodeValue": 0,
@@ -1674,7 +1708,7 @@
   },
   "SplashScreenDir": {
     "declarationFile": "/spring/rts/System/SpringApp.cpp",
-    "declarationLine": 113,
+    "declarationLine": 115,
     "defaultValue": ".",
     "type": "std::string"
   },
@@ -1693,6 +1727,13 @@
     "readOnly": 1,
     "defaultValue": "",
     "type": "std::string"
+  },
+  "StoreDefaultSettings": {
+    "declarationFile": "/spring/rts/System/Config/ConfigHandler.cpp",
+    "declarationLine": 18,
+    "description": "springsettings.cfg will save the settings values, if they match the implicit defaults and were set by a user explicitly",
+    "defaultValue": 0,
+    "type": "bool"
   },
   "TCPAllowConnect": {
     "declarationFile": "/spring/rts/lib/luasocket/src/restrictions.cpp",
@@ -1725,7 +1766,7 @@
   },
   "TextureMemPoolSize": {
     "declarationFile": "/spring/rts/System/SpringApp.cpp",
-    "declarationLine": 106,
+    "declarationLine": 108,
     "description": "Set to 0 to disable, otherwise specify a predefined memory to serve Bitmap allocation requests",
     "defaultValue": "512",
     "minimumValue": "0",
@@ -1838,21 +1879,21 @@
   },
   "UseFontConfigLib": {
     "declarationFile": "/spring/rts/System/SpringApp.cpp",
-    "declarationLine": 109,
+    "declarationLine": 111,
     "description": "Whether the system fontconfig library (if present and enabled at compile-time) should be used for handling fonts.",
     "defaultValue": 1,
     "type": "bool"
   },
   "UseHighResTimer": {
     "declarationFile": "/spring/rts/System/SpringApp.cpp",
-    "declarationLine": 108,
+    "declarationLine": 110,
     "description": "On Windows, sets whether Spring will use low- or high-resolution timer functions for tasks like graphical interpolation between game frames.",
     "defaultValue": 0,
     "type": "bool"
   },
   "UseLuaMemPools": {
     "declarationFile": "/spring/rts/System/SpringApp.cpp",
-    "declarationLine": 107,
+    "declarationLine": 109,
     "description": "Whether Lua VM memory allocations are made from pools.",
     "defaultValue": 1,
     "type": "bool"
@@ -1860,6 +1901,7 @@
   "UseNetMessageSmoothingBuffer": {
     "declarationFile": "/spring/rts/System/GlobalConfig.cpp",
     "declarationLine": 58,
+    "description": "Buffer network packets for a few frames in an attempt to reduce lag from packet time variance. Introduces a fixed lag.",
     "defaultValue": 1,
     "type": "bool"
   },
@@ -2007,7 +2049,7 @@
   },
   "name": {
     "declarationFile": "/spring/rts/System/SpringApp.cpp",
-    "declarationLine": 111,
+    "declarationLine": 113,
     "description": "Sets your name in the game. Since this is overridden by lobbies with your lobby username when playing, it usually only comes up when viewing replays or starting the engine directly for testing purposes.",
     "defaultValue": "UnnamedPlayer",
     "type": "std::string"
