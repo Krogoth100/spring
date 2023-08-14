@@ -97,12 +97,12 @@ const SIndexAndCount LuaVAOImpl::GetDrawIndicesImpl(const TObj* obj)
 template<typename TObj>
 int LuaVAOImpl::AddObjectsToSubmissionImpl(int id)
 {
-	DrawCheckInput inputs = {
-		std::nullopt,          // drawCount
-		std::nullopt,	       // baseVertex
-		std::nullopt,	       // baseIndex
-		submitCmds.size() + 1, // instCount
-		std::nullopt,          // baseInstance
+	DrawCheckInput inputs{
+		std::nullopt,
+		std::nullopt,
+		std::nullopt,
+		static_cast<int>(submitCmds.size() + 1),
+		std::nullopt
 	};
 
 	DrawCheck(GL_TRIANGLES, inputs, true);
@@ -116,12 +116,12 @@ int LuaVAOImpl::AddObjectsToSubmissionImpl(const sol::stack_table& ids)
 {
 	const std::size_t idsSize = ids.size(); //size() is very costly to do in the loop
 
-	DrawCheckInput inputs = {
-		std::nullopt,                // drawCount
-		std::nullopt,	             // baseVertex
-		std::nullopt,	             // baseIndex
-		submitCmds.size() + idsSize, // instCount
-		std::nullopt,                // baseInstance
+	DrawCheckInput inputs{
+		std::nullopt,
+		std::nullopt,
+		std::nullopt,
+		static_cast<int>(submitCmds.size() + idsSize),
+		std::nullopt
 	};
 
 	DrawCheck(GL_TRIANGLES, inputs, true);
