@@ -32,7 +32,8 @@
 #include "LuaTextures.h"
 #include "LuaUtils.h"
 #include "LuaVAO.h"
-#include "LuaVBO.h"
+#include "LuaXBO.h"
+#include "LuaNewGL.h"
 
 #include "Game/Camera.h"
 #include "Game/CameraHandler.h"
@@ -60,6 +61,7 @@
 #include "Rendering/Models/3DModel.h"
 #include "Rendering/Shaders/Shader.h"
 #include "Rendering/Textures/Bitmap.h"
+#include "Rendering/Textures/TextureFormat.h"
 #include "Rendering/Textures/TextureAtlas.h"
 #include "Rendering/Textures/NamedTextures.h"
 #include "Rendering/Textures/3DOTextureHandler.h"
@@ -485,7 +487,8 @@ bool LuaOpenGL::PushEntries(lua_State* L)
 	}
 
 	LuaVAOs::PushEntries(L);
-	LuaVBOs::PushEntries(L);
+	LuaXBOs::PushEntries(L);
+	LuaNewGL::PushEntries(L);
 
 	LuaFonts::PushEntries(L);
 
@@ -5002,35 +5005,6 @@ int LuaOpenGL::Finish(lua_State* L)
 
 /******************************************************************************/
 
-static int PixelFormatSize(GLenum f)
-{
-	switch (f) {
-		case GL_COLOR_INDEX:
-		case GL_STENCIL_INDEX:
-		case GL_DEPTH_COMPONENT:
-		case GL_RED:
-		case GL_GREEN:
-		case GL_BLUE:
-		case GL_ALPHA:
-		case GL_LUMINANCE: {
-			return 1;
-		}
-		case GL_LUMINANCE_ALPHA: {
-			return 2;
-		}
-		case GL_RGB:
-		case GL_BGR: {
-			return 3;
-		}
-		case GL_RGBA:
-		case GL_BGRA: {
-			return 4;
-		}
-	}
-	return -1;
-}
-
-
 static void PushPixelData(lua_State* L, int fSize, const float*& data)
 {
 	if (fSize == 1) {
@@ -5059,8 +5033,8 @@ int LuaOpenGL::ReadPixels(lua_State* L)
 		return 0;
 	}
 
-	int fSize = PixelFormatSize(format);
-	if (fSize < 0) {
+	int fSize = GL::GetPixelFormatSize(format);
+	if (!fSize) {
 		fSize = 4; // good enough?
 	}
 

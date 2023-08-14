@@ -6,6 +6,10 @@
 #include "Rendering/Textures/TextureFormat.h"
 #include <algorithm>
 #include <tuple>
+// temp loc?
+#include "Rendering/Models/3DModel.h"
+#include "Rendering/ModelsDataUploader.h"
+#include <type_traits>
 
 
 // Get gl parameter values into a homogenous GL-typed variable (single or array)
@@ -13,10 +17,9 @@
 template<class GLType>
 inline void glGetAny(GLenum paramName, GLType* data, const int expectedValuesN = -1)
 {
-	GLint ints[1024];
-	assert(expectedValuesN > 0 && expectedValuesN < 1024);
+	GLint ints[4];
 	glGetIntegerv(paramName, ints);
-	std::copy(ints, ints+expectedValuesN, data);
+	std::move(ints, ints+expectedValuesN, data);
 }
 template<>
 inline void glGetAny<GLint>(GLenum paramName, GLint* data, const int)
@@ -85,10 +88,42 @@ inline void glSetAny(AttribValuesTupleType newValues)
 {
 	if constexpr(DedicatedGLFuncPtrPtr)
 	{
-		std::apply(DedicatedGLFuncPtrPtr, newValues);
+		std::apply(*DedicatedGLFuncPtrPtr, newValues);
 	}
 	else // glEnable/glDisable(attribute)
 	{
 		(std::get<0>(newValues) == GL_TRUE? glEnable : glDisable)(GLParamName...);
+	}
+}
+
+
+// temp loc?
+template<class TObj>
+inline SInstanceData GetObjectInstanceData(const TObj* obj, uint8_t teamID, uint8_t drawFlags)
+{
+	uint8_t numPieces;
+	uint32_t bposeIndex;
+	if constexpr(std::is_same_v<TObj, S3DModel>) {
+		numPieces = static_cast<uint8_t>(obj->numPieces);
+		bposeIndex = static_cast<uint32_t>(matrixUploader.GetElemOffset(obj));
+	} else {
+		numPieces = static_cast<uint8_t>(obj->model->numPieces);
+		bposeIndex = static_cast<uint32_t>(matrixUploader.GetElemOffset(obj->model));
+	}
+	return SInstanceData(
+		static_cast<uint32_t>(matrixUploader.GetElemOffset(obj)),
+		teamID,
+		drawFlags,
+		numPieces,
+		static_cast<uint32_t>(modelsUniformsStorage.GetObjOffset(obj)),
+		bposeIndex);
+}
+template<class TObj>
+inline SInstanceData GetObjectInstanceData(const TObj* obj)
+{
+	if constexpr(std::is_same_v<TObj, S3DModel>) {
+		return GetObjectInstanceData<TObj>(obj, 0, 0);
+	} else {
+		return GetObjectInstanceData<TObj>(obj, obj->team, obj->drawFlag);
 	}
 }

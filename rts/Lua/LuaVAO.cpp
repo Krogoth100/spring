@@ -21,28 +21,24 @@ bool LuaVAOs::PushEntries(lua_State* L)
 	REGISTER_LUA_CFUNC(GetVAO);
 
 	sol::state_view lua(L);
-	auto gl = sol::stack::get<sol::table>(L, -1);
+	auto gl = sol::stack::get<sol::table>(L);
 
 	gl.new_usertype<LuaVAOImpl>("VAO",
-		sol::constructors<LuaVAOImpl()>(),
+		sol::constructors<LuaVAOImpl(const LuaVAOImpl::LuaXBOImplSP&, const sol::optional<LuaVAOImpl::LuaXBOImplSP>&, const sol::optional<LuaVAOImpl::LuaXBOImplSP>&)>(),
 		"Delete", &LuaVAOImpl::Delete,
 
-		"AttachVertexBuffer", &LuaVAOImpl::AttachVertexBuffer,
-		"AttachInstanceBuffer", &LuaVAOImpl::AttachInstanceBuffer,
-		"AttachIndexBuffer", &LuaVAOImpl::AttachIndexBuffer,
+		"UpdateUnitBins", &LuaVAOImpl::UpdateUnitBins,
+		"UpdateFeatureBins", &LuaVAOImpl::UpdateFeatureBins,
+		"SubmitBins", sol::overload(
+			sol::resolve<void()>(&LuaVAOImpl::SubmitBins),
+			sol::resolve<void(const sol::function)>(&LuaVAOImpl::SubmitBins)
+		),
 
-		"DrawArrays", &LuaVAOImpl::DrawArrays,
-		"DrawElements", &LuaVAOImpl::DrawElements,
+		"SetDrawMode", &LuaVAOImpl::SetDrawMode,
+		"Draw", &LuaVAOImpl::Draw,
+		"DrawReusedBins", &LuaVAOImpl::DrawReusedBins,
 
 		"ClearSubmission", &LuaVAOImpl::ClearSubmission,
-		"AddUnitsToSubmission", sol::overload(
-			sol::resolve<int(int)>(&LuaVAOImpl::AddUnitsToSubmission),
-			sol::resolve<int(const sol::stack_table&)>(&LuaVAOImpl::AddUnitsToSubmission)
-		),
-		"AddFeaturesToSubmission", sol::overload(
-			sol::resolve<int(int)>(&LuaVAOImpl::AddFeaturesToSubmission),
-			sol::resolve<int(const sol::stack_table&)>(&LuaVAOImpl::AddFeaturesToSubmission)
-		),
 		"AddUnitDefsToSubmission", sol::overload(
 			sol::resolve<int(int)>(&LuaVAOImpl::AddUnitDefsToSubmission),
 			sol::resolve<int(const sol::stack_table&)>(&LuaVAOImpl::AddUnitDefsToSubmission)
@@ -55,7 +51,6 @@ bool LuaVAOs::PushEntries(lua_State* L)
 		"Submit", &LuaVAOImpl::Submit
 	);
 
-	gl.set("VAO", sol::lua_nil); // don't want this to be accessible directly without gl.GetVAO
 #if defined(__GNUG__) && defined(_DEBUG)
 	lua_settop(L, top); //workaround for https://github.com/ThePhD/sol2/issues/1441, remove when fixed
 #endif
@@ -92,8 +87,8 @@ int LuaVAOs::GetVAO(lua_State* L)
 		return 0;
 	}
 
-	return sol::stack::call_lua(L, 1, [L]() {
+	return sol::stack::call_lua(L, 1, [L](const LuaVAOImpl::LuaXBOImplSP& luaVBO, const sol::optional<LuaVAOImpl::LuaXBOImplSP>& luaIBO, const sol::optional<LuaVAOImpl::LuaXBOImplSP>& luaSBO) {
 		auto& activeVAOs = CLuaHandle::GetActiveVAOs(L);
-		return activeVAOs.luaVAOs.emplace_back(std::make_shared<LuaVAOImpl>()).lock();
+		return activeVAOs.luaVAOs.emplace_back(std::make_shared<LuaVAOImpl>(luaVBO, luaIBO, luaSBO)).lock();
 	});
 }

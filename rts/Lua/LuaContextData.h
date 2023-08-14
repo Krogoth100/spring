@@ -12,7 +12,7 @@
 #include "LuaAtlasTextures.h"
 #include "LuaFBOs.h"
 #include "LuaRBOs.h"
-#include "LuaVBO.h"
+#include "LuaXBO.h"
 #include "LuaVAO.h"
 #include "LuaDisplayLists.h"
 #endif
@@ -113,7 +113,7 @@ public:
 	LuaAtlasTextures atlasTextures;
 	LuaFBOs fbos;
 	LuaRBOs rbos;
-	LuaVBOs vbos;
+	LuaXBOs xbos;
 	LuaVAOs vaos;
 	CLuaDisplayLists displayLists;
 

@@ -9,9 +9,14 @@
 #include "lib/sol2/sol.hpp"
 
 #include "System/SafeUtil.h"
-#include "Rendering/GL/VBO.h"
+#include "Rendering/GL/XBO.h"
 #include "Rendering/GL/VAO.h"
-#include "LuaVBOImpl.h"
+#include "Rendering/GL/glHelpers.h"
+#include "LuaXBOImpl.h"
+#include "Rendering/Models/3DModel.h"
+#include "Sim/Units/UnitHandler.h"
+#include "Sim/Features/FeatureHandler.h"
+#include "System/Log/ILog.h" // temp
 
 #include "LuaUtils.h"
 
@@ -25,15 +30,25 @@
 ******************************************************************************/
 
 
-LuaVAOImpl::LuaVAOImpl()
+LuaVAOImpl::LuaVAOImpl(const LuaXBOImplSP& luaVBO, const sol::optional<LuaXBOImplSP>& luaIBO, const sol::optional<LuaXBOImplSP>& luaSBO)
 	: vao{nullptr}
 
-	, vertLuaVBO{nullptr}
-	, instLuaVBO{nullptr}
-	, indxLuaVBO{nullptr}
+	, luaVBO(luaVBO)
+	, luaSBO(luaSBO.value_or(nullptr))
+	, luaIBO(luaIBO.value_or(nullptr))
 
 	, baseInstance{0u}
-{}
+{
+	/*if (luaVBO && luaSBO) {
+		for (const auto& v : luaVBO->bufferAttribDefs) {
+			for (const auto& i : luaSBO->bufferAttribDefs) {
+				if (v.first == i.first) {
+					LuaUtils::SolLuaError("[LuaVAOImpl::%s] Vertex and Instance LuaXBO have defined a duplicate attribute [%d]", __func__, v.first);
+				}
+			}
+		}
+	}*/
+}
 
 
 /***
@@ -43,9 +58,9 @@ LuaVAOImpl::LuaVAOImpl()
  */
 void LuaVAOImpl::Delete()
 {
-	vertLuaVBO = nullptr;
-	instLuaVBO = nullptr;
-	indxLuaVBO = nullptr;
+	luaVBO = nullptr;
+	luaSBO = nullptr;
+	luaIBO = nullptr;
 
 	vao = nullptr;
 }
@@ -57,73 +72,10 @@ LuaVAOImpl::~LuaVAOImpl()
 
 bool LuaVAOImpl::Supported()
 {
-	static bool supported = VBO::IsSupported(GL_ARRAY_BUFFER) && VAO::IsSupported() && GLEW_ARB_instanced_arrays && GLEW_ARB_draw_elements_base_vertex && GLEW_ARB_multi_draw_indirect;
+	static bool supported = XBO::IsSupported(GL_ARRAY_BUFFER) && VAO::IsSupported() && GLEW_ARB_instanced_arrays && GLEW_ARB_draw_elements_base_vertex && GLEW_ARB_multi_draw_indirect;
 	return supported;
 }
 
-
-void LuaVAOImpl::AttachBufferImpl(const std::shared_ptr<LuaVBOImpl>& luaVBO, std::shared_ptr<LuaVBOImpl>& thisLuaVBO, GLenum reqTarget)
-{
-	if (thisLuaVBO) {
-		LuaUtils::SolLuaError("[LuaVAOImpl::%s] LuaVBO already attached", __func__);
-	}
-
-	if (luaVBO->defTarget != reqTarget) {
-		LuaUtils::SolLuaError("[LuaVAOImpl::%s] LuaVBO should have been created with [%u] target, got [%u] target instead", __func__, reqTarget, luaVBO->defTarget);
-	}
-
-	if (!luaVBO->vbo) {
-		LuaUtils::SolLuaError("[LuaVAOImpl::%s] LuaVBO is invalid. Did you sucessfully call vbo:Define()?", __func__);
-	}
-
-	thisLuaVBO = luaVBO;
-
-	if (vertLuaVBO && instLuaVBO) {
-		for (const auto& v : vertLuaVBO->bufferAttribDefs) {
-			for (const auto& i : instLuaVBO->bufferAttribDefs) {
-				if (v.first == i.first) {
-					LuaUtils::SolLuaError("[LuaVAOImpl::%s] Vertex and Instance LuaVBO have defined a duplicate attribute [%d]", __func__, v.first);
-				}
-			}
-		}
-	}
-}
-
-
-/*** Attachs a VBO to be used as a vertex buffer
- *
- * @function VAO:AttachVertexBuffer
- * @tparam VBO vbo
- * @treturn nil
- */
-void LuaVAOImpl::AttachVertexBuffer(const LuaVBOImplSP& luaVBO)
-{
-	AttachBufferImpl(luaVBO, vertLuaVBO, GL_ARRAY_BUFFER);
-}
-
-
-/*** Attachs a VBO to be used as an instance buffer
- *
- * @function VAO:AttachInstanceBuffer
- * @tparam VBO vbo
- * @treturn nil
- */
-void LuaVAOImpl::AttachInstanceBuffer(const LuaVBOImplSP& luaVBO)
-{
-	AttachBufferImpl(luaVBO, instLuaVBO, GL_ARRAY_BUFFER);
-}
-
-
-/*** Attachs a VBO to be used as an index buffer
- *
- * @function VAO:AttachIndexBuffer
- * @tparam VBO vbo
- * @treturn nil
- */
-void LuaVAOImpl::AttachIndexBuffer(const LuaVBOImplSP& luaVBO)
-{
-	AttachBufferImpl(luaVBO, indxLuaVBO, GL_ELEMENT_ARRAY_BUFFER);
-}
 
 template<typename TObj>
 const SIndexAndCount LuaVAOImpl::GetDrawIndicesImpl(int id)
@@ -145,12 +97,12 @@ const SIndexAndCount LuaVAOImpl::GetDrawIndicesImpl(const TObj* obj)
 template<typename TObj>
 int LuaVAOImpl::AddObjectsToSubmissionImpl(int id)
 {
-	DrawCheckInput inputs{
-		std::nullopt,
-		std::nullopt,
-		std::nullopt,
-		static_cast<int>(submitCmds.size() + 1),
-		std::nullopt
+	DrawCheckInput inputs = {
+		std::nullopt,          // drawCount
+		std::nullopt,	       // baseVertex
+		std::nullopt,	       // baseIndex
+		submitCmds.size() + 1, // instCount
+		std::nullopt,          // baseInstance
 	};
 
 	DrawCheck(GL_TRIANGLES, inputs, true);
@@ -164,12 +116,12 @@ int LuaVAOImpl::AddObjectsToSubmissionImpl(const sol::stack_table& ids)
 {
 	const std::size_t idsSize = ids.size(); //size() is very costly to do in the loop
 
-	DrawCheckInput inputs{
-		std::nullopt,
-		std::nullopt,
-		std::nullopt,
-		static_cast<int>(submitCmds.size() + idsSize),
-		std::nullopt
+	DrawCheckInput inputs = {
+		std::nullopt,                // drawCount
+		std::nullopt,	             // baseVertex
+		std::nullopt,	             // baseIndex
+		submitCmds.size() + idsSize, // instCount
+		std::nullopt,                // baseInstance
 	};
 
 	DrawCheck(GL_TRIANGLES, inputs, true);
@@ -220,26 +172,26 @@ void LuaVAOImpl::CheckDrawPrimitiveType(GLenum mode) const
 	}
 }
 
-void LuaVAOImpl::CondInitVAO()
+void LuaVAOImpl::EnsureVAOInit()
 {
 	if (vao &&
-		(vertLuaVBO && vertLuaVBO->GetId() == oldVertVBOId) &&
-		(indxLuaVBO && indxLuaVBO->GetId() == oldIndxVBOId) &&
-		(instLuaVBO && instLuaVBO->GetId() == oldInstVBOId))
-		return; //already init and all VBOs still have same IDs
+		(luaVBO && luaVBO->GetId() == oldVBOId) &&
+		(luaIBO && luaIBO->GetId() == oldIBOId) &&
+		(luaSBO && luaSBO->GetId() == oldSBOId))
+		return; //already init and all XBOs still have same IDs
 
 	vao = nullptr;
 	vao = std::make_unique<VAO>();
 	vao->Bind();
 
-	if (vertLuaVBO) {
-		vertLuaVBO->vbo->Bind(GL_ARRAY_BUFFER); //type is needed cause same buffer could have been rebounded as something else using LuaVBOs functions
-		oldVertVBOId = vertLuaVBO->GetId();
+	if (luaVBO) {
+		luaVBO->xbo->Bind(GL_ARRAY_BUFFER); //type is needed cause same buffer could have been rebounded as something else using LuaXBOs functions
+		oldVBOId = luaVBO->GetId();
 	}
 
-	if (indxLuaVBO) {
-		indxLuaVBO->vbo->Bind(GL_ELEMENT_ARRAY_BUFFER);
-		oldIndxVBOId = indxLuaVBO->GetId();
+	if (luaIBO) {
+		luaIBO->xbo->Bind(GL_ELEMENT_ARRAY_BUFFER);
+		oldIBOId = luaIBO->GetId();
 	}
 
 	#define INT2PTR(x) (reinterpret_cast<void*>(static_cast<intptr_t>(x)))
@@ -254,30 +206,33 @@ void LuaVAOImpl::CondInitVAO()
 			glVertexAttribIPointer(index, size, type, stride, pointer);
 	};
 
-	if (vertLuaVBO)
-		for (const auto& va : vertLuaVBO->bufferAttribDefsVec) {
+	if (luaVBO)
+		for (const auto& va : luaVBO->bufferAttribDefsVec) {
 			const auto& attr = va.second;
 			glEnableVertexAttribArray(va.first);
-			glVertexAttribPointerFunc(va.first, attr.size, attr.type, attr.normalized, vertLuaVBO->elemSizeInBytes, INT2PTR(attr.pointer));
+			glVertexAttribPointerFunc(va.first, attr.size, attr.type, attr.normalized, luaVBO->elemSizeInBytes, INT2PTR(attr.pointer));
 			glVertexAttribDivisor(va.first, 0);
 			indMin = std::min(indMin, static_cast<GLenum>(va.first));
 			indMax = std::max(indMax, static_cast<GLenum>(va.first));
 		}
 
-	if (instLuaVBO) {
-		if (vertLuaVBO)
-			vertLuaVBO->vbo->Unbind();
+	if (luaSBO) {
+		if (luaVBO)
+			luaVBO->xbo->Unbind();
 
-		instLuaVBO->vbo->Bind(GL_ARRAY_BUFFER);
-		oldInstVBOId = instLuaVBO->GetId();
+		luaSBO->xbo->Bind(GL_ARRAY_BUFFER);
+		oldSBOId = luaSBO->GetId();
 
-		for (const auto& va : instLuaVBO->bufferAttribDefsVec) {
+		// start instance attribute indices right after vertex attributes; necessary for proxy dispatchers to maintain reasonable attribute layouts
+		GLuint index = luaVBO->bufferAttribDefsVec.back().first +1;
+		for (const auto& va : luaSBO->bufferAttribDefsVec) {
 			const auto& attr = va.second;
-			glEnableVertexAttribArray(va.first);
-			glVertexAttribPointerFunc(va.first, attr.size, attr.type, attr.normalized, instLuaVBO->elemSizeInBytes, INT2PTR(attr.pointer));
-			glVertexAttribDivisor(va.first, 1);
-			indMin = std::min(indMin, static_cast<GLenum>(va.first));
-			indMax = std::max(indMax, static_cast<GLenum>(va.first));
+			glEnableVertexAttribArray(index);
+			glVertexAttribPointerFunc(index, attr.size, attr.type, attr.normalized, luaSBO->elemSizeInBytes, INT2PTR(attr.pointer));
+			glVertexAttribDivisor(index, 1);
+			indMin = std::min(indMin, static_cast<GLenum>(index));
+			indMax = std::max(indMax, static_cast<GLenum>(index));
+			++index;
 		}
 	}
 
@@ -285,14 +240,14 @@ void LuaVAOImpl::CondInitVAO()
 
 	vao->Unbind();
 
-	if (vertLuaVBO && vertLuaVBO->vbo->bound)
-		vertLuaVBO->vbo->Unbind();
+	if (luaVBO && luaVBO->xbo->bound)
+		luaVBO->xbo->Unbind();
 
-	if (instLuaVBO && instLuaVBO->vbo->bound)
-		instLuaVBO->vbo->Unbind();
+	if (luaSBO && luaSBO->xbo->bound)
+		luaSBO->xbo->Unbind();
 
-	if (indxLuaVBO && indxLuaVBO->vbo->bound)
-		indxLuaVBO->vbo->Unbind();
+	if (luaIBO && luaIBO->xbo->bound)
+		luaIBO->xbo->Unbind();
 
 	//restore default state
 	for (GLuint index = indMin; index <= indMax; ++index) {
@@ -305,43 +260,43 @@ LuaVAOImpl::DrawCheckResult LuaVAOImpl::DrawCheck(GLenum mode, const DrawCheckIn
 {
 	LuaVAOImpl::DrawCheckResult result{};
 
-	if (vertLuaVBO)
-		vertLuaVBO->UpdateModelsVBOElementCount(); //need to update elements count because underlyiing VBO could have been updated
+	if (luaVBO)
+		luaVBO->UpdateModelsXBOElementCount(); //need to update elements count because underlyiing XBO could have been updated
 
 	if (indexed) {
-		if (!indxLuaVBO)
+		if (!luaIBO)
 			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: No index buffer is attached. Did you succesfully call vao:AttachIndexBuffer()?", __func__);
 
-		indxLuaVBO->UpdateModelsVBOElementCount(); //need to update elements count because underlyiing VBO could have been updated
+		luaIBO->UpdateModelsXBOElementCount(); //need to update elements count because underlyiing XBO could have been updated
 
 		result.baseIndex  = std::max(inputs.baseIndex.value_or(0) , 0);
 		result.baseVertex = std::max(inputs.baseVertex.value_or(0), 0); //can't be checked easily
 
-		result.drawCount = inputs.drawCount.value_or(indxLuaVBO->elementsCount);
+		result.drawCount = inputs.drawCount.value_or(luaIBO->elementsCount);
 		if (!inputs.drawCount.has_value() || inputs.drawCount.value() <= 0)
 			result.drawCount -= result.baseIndex; //adjust automatically
 
 		if (result.drawCount <= 0)
 			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Non-positive number of draw elements %d is requested", __func__, result.drawCount);
 
-		if (result.drawCount > indxLuaVBO->elementsCount - result.baseIndex)
-			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested number of elements %d with offset %d exceeds buffer size %u", __func__, result.drawCount, result.baseIndex, indxLuaVBO->elementsCount);
+		if (result.drawCount > luaIBO->elementsCount - result.baseIndex)
+			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested number of elements %d with offset %d exceeds buffer size %u", __func__, result.drawCount, result.baseIndex, luaIBO->elementsCount);
 
 	} else {
-		if (!vertLuaVBO) {
+		if (!luaVBO) {
 			if (!inputs.drawCount.has_value())
 				LuaUtils::SolLuaError("[LuaVAOImpl::%s]: In case vertex buffer is not attached, the drawCount param should be set explicitly", __func__);
 
 			result.drawCount = inputs.drawCount.value();
 		}
 		else {
-			result.drawCount = inputs.drawCount.value_or(vertLuaVBO->elementsCount);
+			result.drawCount = inputs.drawCount.value_or(luaVBO->elementsCount);
 
 			if (!inputs.drawCount.has_value())
 				result.drawCount -= result.baseIndex; //note baseIndex not baseVertex
 
-			if (result.drawCount > vertLuaVBO->elementsCount - result.baseIndex)
-				LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested number of vertices %d with offset %d exceeds buffer size %u", __func__, result.drawCount, result.baseIndex, vertLuaVBO->elementsCount);
+			if (result.drawCount > luaVBO->elementsCount - result.baseIndex)
+				LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested number of vertices %d with offset %d exceeds buffer size %u", __func__, result.drawCount, result.baseIndex, luaVBO->elementsCount);
 		}
 	}
 
@@ -349,8 +304,8 @@ LuaVAOImpl::DrawCheckResult LuaVAOImpl::DrawCheck(GLenum mode, const DrawCheckIn
 	result.instCount = std::max(inputs.instCount.value_or(0), 0); // 0 - forces ordinary version, while 1 - calls *Instanced()
 
 	if (result.instCount > 0) {
-		if (instLuaVBO && (result.instCount > instLuaVBO->elementsCount - result.baseInstance))
-			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested number of instances %d with offset %d exceeds buffer size %u", __func__, result.instCount, result.baseInstance, instLuaVBO->elementsCount);
+		if (luaSBO && (result.instCount > luaSBO->elementsCount - result.baseInstance))
+			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested number of instances %d with offset %d exceeds buffer size %u", __func__, result.instCount, result.baseInstance, luaSBO->elementsCount);
 	}
 	else {
 		if (result.baseInstance > 0)
@@ -358,130 +313,17 @@ LuaVAOImpl::DrawCheckResult LuaVAOImpl::DrawCheck(GLenum mode, const DrawCheckIn
 	}
 
 	CheckDrawPrimitiveType(mode);
-	CondInitVAO();
+	EnsureVAOInit();
 
 	return result;
 }
 
-
-/***
- *
- * @function VAO:DrawArrays
- * @number glEnum primitivesMode
- * @number[opt] numVertices
- * @number[opt] vertexCount
- * @number[opt] vertexFirst
- * @number[opt] instanceCount
- * @number[opt] instanceFirst
- * @treturn nil
- */
-void LuaVAOImpl::DrawArrays(GLenum mode, sol::optional<int> vertCountOpt, sol::optional<int> vertexFirstOpt, sol::optional<int> instanceCountOpt, sol::optional<int> instanceFirstOpt)
-{
-	DrawCheckInput inputs{
-		vertCountOpt,
-		std::nullopt,
-		vertexFirstOpt,
-		instanceCountOpt,
-		instanceFirstOpt
-	};
-
-	const auto result = DrawCheck(mode, inputs, false);
-
-	vao->Bind();
-
-	if (result.instCount == 0)
-		glDrawArrays(mode, result.baseIndex, result.drawCount);
-	else {
-		if (result.baseInstance > 0)
-			glDrawArraysInstancedBaseInstance(mode, result.baseIndex, result.drawCount, result.instCount, result.baseInstance);
-		else
-			glDrawArraysInstanced(mode, result.baseIndex, result.drawCount, result.instCount);
-	}
-
-	vao->Unbind();
-}
-
-
-/***
- *
- * @function VAO:DrawElements
- * @number glEnum primitivesMode
- * @number[opt] drawCount
- * @number[opt] baseIndex
- * @number[opt] instanceCount
- * @number[opt] baseVertex
- * @number[opt] baseInstance
- * @treturn nil
- */
-void LuaVAOImpl::DrawElements(GLenum mode, sol::optional<int> indCountOpt, sol::optional<int> indElemOffsetOpt, sol::optional<int> instanceCountOpt, sol::optional<int> baseVertexOpt, sol::optional<int> instanceFirstOpt)
-{
-	DrawCheckInput inputs{
-		indCountOpt,
-		baseVertexOpt,
-		indElemOffsetOpt,
-		instanceCountOpt,
-		instanceFirstOpt
-	};
-
-	const auto result = DrawCheck(mode, inputs, true);
-
-	const auto indElemOffsetInBytes = result.baseIndex * indxLuaVBO->elemSizeInBytes;
-
-	const auto indexType = indxLuaVBO->bufferAttribDefsVec[0].second.type;
-
-	glEnable(GL_PRIMITIVE_RESTART);
-	glPrimitiveRestartIndex(indxLuaVBO->primitiveRestartIndex);
-
-	vao->Bind();
-
-	#define INT2PTR(x) (reinterpret_cast<void*>(static_cast<intptr_t>(x)))
-	if (result.instCount == 0) {
-		if (result.baseVertex == 0)
-			glDrawElements(mode, result.drawCount, indexType, INT2PTR(indElemOffsetInBytes));
-		else
-			glDrawElementsBaseVertex(mode, result.drawCount, indexType, INT2PTR(indElemOffsetInBytes), result.baseVertex);
-	} else {
-		if (result.baseInstance > 0)
-			glDrawElementsInstancedBaseVertexBaseInstance(mode, result.drawCount, indexType, INT2PTR(indElemOffsetInBytes), result.instCount, result.baseVertex, result.baseInstance);
-		else {
-			if (result.baseVertex == 0)
-				glDrawElementsInstanced(mode, result.drawCount, indexType, INT2PTR(indElemOffsetInBytes), result.instCount);
-			else
-				glDrawElementsInstancedBaseVertex(mode, result.drawCount, indexType, INT2PTR(indElemOffsetInBytes), result.instCount, result.baseVertex);
-		}
-	}
-	#undef INT2PTR
-
-	vao->Unbind();
-
-	glDisable(GL_PRIMITIVE_RESTART);
-}
 
 void LuaVAOImpl::ClearSubmission()
 {
 	baseInstance = 0u;
 	submitCmds.clear();
 }
-
-
-/***
- *
- * @function VAO:AddUnitsToSubmission
- * @tparam number|{number,...} unitIDs
- * @treturn number submittedCount
- */
-int LuaVAOImpl::AddUnitsToSubmission(int id) { return AddObjectsToSubmissionImpl<CUnit>(id); }
-int LuaVAOImpl::AddUnitsToSubmission(const sol::stack_table& ids) { return  AddObjectsToSubmissionImpl<CUnit>(ids); }
-
-
-/***
- *
- * @function VAO:AddFeaturesToSubmission
- * @tparam number|{number,...} featureIDs
- * @treturn number submittedCount
- */
-int LuaVAOImpl::AddFeaturesToSubmission(int id) { return AddObjectsToSubmissionImpl<CFeature>(id); }
-int LuaVAOImpl::AddFeaturesToSubmission(const sol::stack_table& ids) { return AddObjectsToSubmissionImpl<CFeature>(ids); }
 
 
 /***
@@ -534,12 +376,247 @@ void LuaVAOImpl::RemoveFromSubmission(int idx)
  */
 void LuaVAOImpl::Submit()
 {
-	glEnable(GL_PRIMITIVE_RESTART);
-	glPrimitiveRestartIndex(indxLuaVBO->primitiveRestartIndex);
-
 	vao->Bind();
 	glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, submitCmds.data(), submitCmds.size(), sizeof(SDrawElementsIndirectCommand));
 	vao->Unbind();
+}
 
-	glDisable(GL_PRIMITIVE_RESTART);
+
+
+///////////////////////////////////////////////////////////////////
+//
+//  Models
+
+
+void LuaVAOImpl::EnsureBinsInit()
+{
+	assert(luaSBO->GetAttributeCount() == 1);
+
+	if (!bins) bins = std::make_unique<Bins>(submitCmds);
+}
+
+
+template<typename TObj>
+void LuaVAOImpl::Bins::UpdateImpl(const sol::stack_table& removedObjects, const sol::stack_table& addedObjects, sol::optional<size_t> removedCount, sol::optional<size_t> addedCount)
+{
+	const size_t removedObjectCount = (removedCount.has_value()? removedCount.value() : removedObjects.size());
+	const size_t addedObjectCount = (addedCount.has_value()? addedCount.value() : addedObjects.size());
+	if (removedObjectCount == 0 && addedObjectCount == 0) return;
+
+	size_t firstChangedBinIndex = std::numeric_limits<size_t>::max();
+
+	for (std::size_t i = 1; i <= removedObjectCount; ++i) {
+		lua_Number objIdLua = removedObjects.raw_get<lua_Number>(i);
+		const int objId = spring::SafeCast<int, lua_Number>(objIdLua);
+
+		const TObj* obj = LuaUtils::SolIdToObject<TObj>(objId, __func__);
+		const int modelId = obj->model->id;
+		const size_t binIndex = modelIdToBinIndex[modelId];
+		firstChangedBinIndex = std::min(firstChangedBinIndex, binIndex);
+		auto& bin = bins[binIndex];
+
+		#define UnorderedErase(vector, index) \
+			(vector)[index] = (vector).back(); \
+			(vector).pop_back()
+		#define UnorderedMapSubstitute(map, substitutedKey, substitutionKey, val) \
+			(map)[substitutionKey] = val; \
+			(map).erase(substitutedKey)
+
+		if (bin.objIds.size() == 1) {
+			UnorderedMapSubstitute(modelIdToBinIndex, modelId, bins.back().modelId, binIndex);
+			objIdToLocalInstance.erase(objId);
+			UnorderedErase(bins, binIndex);
+			UnorderedErase(submitCmds, binIndex);
+			continue;
+		}
+
+		const size_t localInstance = objIdToLocalInstance[objId];
+		UnorderedMapSubstitute(objIdToLocalInstance, objId, bin.objIds.back(), localInstance);
+		UnorderedErase(bin.objIds, localInstance);
+		UnorderedErase(bin.instanceData, localInstance);
+		--submitCmds[binIndex].instanceCount;
+
+		#undef UnorderedErase
+		#undef UnorderedMapSubstitute
+	}
+
+	for (std::size_t i = 1; i <= addedObjectCount; ++i) {
+		lua_Number objIdLua = addedObjects.raw_get<lua_Number>(i);
+		const int objId = spring::SafeCast<int, lua_Number>(objIdLua);
+
+		const TObj* obj = LuaUtils::SolIdToObject<TObj>(objId, __func__);
+		const auto model = obj->model;
+		const int modelId = model->id;
+
+		auto binIndexIt = modelIdToBinIndex.find(modelId);
+		size_t binIndex;
+
+		if (binIndexIt == modelIdToBinIndex.end()) {
+			binIndex = bins.size();
+			modelIdToBinIndex[modelId] = binIndex;
+			bins.emplace_back(modelId, obj->GetDef()->id);
+			submitCmds.emplace_back(
+				model->indxCount,
+				0u,
+				model->indxStart,
+				0u,
+				0u
+			);
+		} else {
+			binIndex = binIndexIt->second;
+		}
+
+		firstChangedBinIndex = std::min(firstChangedBinIndex, binIndex);
+		auto& bin = bins[binIndex];
+
+		objIdToLocalInstance[objId] = bin.objIds.size();
+		bin.objIds.emplace_back(objId);
+		bin.instanceData.emplace_back(GetObjectInstanceData(obj));
+		++submitCmds[binIndex].instanceCount;
+
+		assert(bin.instanceData.back());
+	}
+
+	assert(bins.size() == submitCmds.size());
+
+	firstChangedInstance = 0;
+	for (size_t binIndex = 0; binIndex < firstChangedBinIndex; ++binIndex) {
+		firstChangedInstance += bins[binIndex].objIds.size();
+	}
+
+	instanceData.resize(instanceData.size() +addedObjectCount -removedObjectCount);
+	size_t instance = firstChangedInstance;
+	for (size_t binIndex = firstChangedBinIndex; binIndex < bins.size(); ++binIndex) {
+		const auto& localInstanceData = bins[binIndex].instanceData;
+
+		assert(localInstanceData.size() == submitCmds[binIndex].instanceCount);
+
+		std::copy(localInstanceData.begin(), localInstanceData.end(), instanceData.begin()+instance);
+		submitCmds[binIndex].baseInstance = instance;
+		instance += localInstanceData.size();
+	}
+
+	requireInstanceDataUpload = true;
+}
+
+
+/* Lua */
+void LuaVAOImpl::UpdateUnitBins(const sol::stack_table& removedUnits, const sol::stack_table& addedUnits, sol::optional<size_t> removedCount, sol::optional<size_t> addedCount)
+{
+	EnsureBinsInit();
+	bins->UpdateImpl<CUnit>(removedUnits, addedUnits, removedCount, addedCount);
+}
+
+
+/* Lua */
+void LuaVAOImpl::UpdateFeatureBins(const sol::stack_table& removedFeatures, const sol::stack_table& addedFeatures, sol::optional<size_t> removedCount, sol::optional<size_t> addedCount)
+{
+	EnsureBinsInit();
+	bins->UpdateImpl<CFeature>(removedFeatures, addedFeatures, removedCount, addedCount);
+}
+
+
+void LuaVAOImpl::UpdateBinsGPU()
+{
+	if (bins->requireInstanceDataUpload) {
+		const size_t firstChangedInstance = bins->firstChangedInstance;
+		luaSBO->MemorizedUpload(firstChangedInstance*sizeof(SInstanceData), bins->instanceData.size()*sizeof(SInstanceData), &bins->instanceData[firstChangedInstance]);
+
+		bins->requireInstanceDataUpload = false;
+	}
+}
+
+
+/* Lua */
+void LuaVAOImpl::SubmitBins()
+{
+	EnsureBinsInit();
+	EnsureVAOInit();
+
+	UpdateBinsGPU();
+
+	Submit();
+}
+
+
+/* Lua */
+void LuaVAOImpl::SubmitBins(const sol::function binPrepFunc)
+{
+	EnsureBinsInit();
+	EnsureVAOInit();
+
+	UpdateBinsGPU();
+
+	vao->Bind();
+
+	auto submitCmdPtr = &submitCmds[0];
+	for (const auto& bin : bins->bins) {
+		binPrepFunc(bin.objIds.front(), bin.sampleDefId);
+		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, submitCmdPtr, 1, sizeof(SDrawElementsIndirectCommand));
+		++submitCmdPtr;
+	}
+
+	vao->Unbind();
+}
+
+
+///////////////////////////////////////////////////////////////////
+//
+//  Custom shapes
+
+
+/* Lua */
+void LuaVAOImpl::SetDrawMode(GLenum drawMode_)
+{
+	drawMode = drawMode_;
+}
+
+
+/* Lua */
+void LuaVAOImpl::Draw(sol::optional<GLsizei> count)
+{
+	EnsureVAOInit();
+
+	vao->Bind();
+
+	const GLsizei instanceCount = count.value_or(luaSBO? luaSBO->GetLastMemorizedUploadEndPosition()/sizeof(SInstanceData) : 1);
+	if (luaIBO) {
+		glDrawElementsInstanced(drawMode, luaIBO->elementsCount, LuaXBOImpl::DEFAULT_INDX_ATTR_TYPE, 0, instanceCount);
+	} else {
+		glDrawArraysInstanced(drawMode, 0, luaVBO->elementsCount, instanceCount);
+	}
+
+	vao->Unbind();
+}
+
+
+/* Lua */
+void LuaVAOImpl::DrawReusedBins(const LuaVAOImplSP& luaVAO, const sol::function binGateFunc)
+{
+	assert(luaVAO->bins);
+
+	EnsureVAOInit();
+
+	vao->Bind();
+
+	const auto& bins = luaVAO->bins->bins;
+
+	GLuint binFirstInstance = 0;
+	if (luaIBO) {
+		for (const auto& bin : bins) {
+			sol::optional<bool> passed = binGateFunc(bin.objIds.front(), bin.sampleDefId);
+			if (passed.value_or(true))
+				glDrawElementsInstancedBaseInstance(drawMode, luaIBO->elementsCount, LuaXBOImpl::DEFAULT_INDX_ATTR_TYPE, 0, bin.instanceData.size(), binFirstInstance);
+			binFirstInstance += bin.instanceData.size();
+		}
+	} else {
+		for (const auto& bin : bins) {
+			sol::optional<bool> passed = binGateFunc(bin.objIds.front(), bin.sampleDefId);
+			if (passed.value_or(true))
+				glDrawArraysInstancedBaseInstance(drawMode, 0, luaVBO->elementsCount, bin.instanceData.size(), binFirstInstance);
+			binFirstInstance += bin.instanceData.size();
+		}
+	}
+
+	vao->Unbind();
 }
