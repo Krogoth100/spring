@@ -9,7 +9,6 @@
 #include "Map/HeightMapTexture.h"
 #include "Map/ReadMap.h"
 #include "Map/SMF/Basic/BasicMeshDrawer.h"
-#include "Map/SMF/ROAM/RoamMeshDrawer.h"
 #include "Rendering/GlobalRendering.h"
 #include "Rendering/ShadowHandler.h"
 #include "Rendering/Env/ISky.h"
@@ -25,15 +24,12 @@
 #include "System/Log/ILog.h"
 #include "System/SpringMath.h"
 
-//Basic, ROAM
-static constexpr int MIN_GROUND_DETAIL[] = {                               0,   4};
-static constexpr int MAX_GROUND_DETAIL[] = {CBasicMeshDrawer::LOD_LEVELS - 1, 200};
-
 CONFIG(int, GroundDetail)
 	.defaultValue(60)
 	.headlessValue(0)
-	.minimumValue(MIN_GROUND_DETAIL[1])
-	.maximumValue(MAX_GROUND_DETAIL[1])
+	.minimumValue(0)
+	// todo: ROAM cleanup
+	.maximumValue(0)
 	.description("Controls how detailed the map geometry will be. On lowered settings, cliffs may appear to be jagged or \"melting\".");
 CONFIG(bool, MapBorder).defaultValue(true).description("Draws a solid border at the edges of the map.");
 
@@ -47,12 +43,6 @@ CONFIG(bool, AllowDeferredMapRendering).defaultValue(false).safemodeValue(false)
 CONFIG(bool, AllowDrawMapPostDeferredEvents).defaultValue(false).description("Enable DrawGroundPostDeferred Lua callin.");
 CONFIG(bool, AllowDrawMapDeferredEvents).defaultValue(false).description("Enable DrawGroundDeferred Lua callin.");
 
-
-CONFIG(int, ROAM)
-	.defaultValue(1)
-	.minimumValue(0)
-	.maximumValue(1)
-	.description("Use ROAM for terrain mesh rendering: 0 to disable, 1=VBO mode to enable.");
 
 CONFIG(bool, AlwaysSendDrawGroundEvents)
 	.defaultValue(false)
@@ -68,7 +58,7 @@ CSMFGroundDrawer::CSMFGroundDrawer(CSMFReadMap* rm)
 	, geomBuffer{"GROUNDDRAWER-GBUFFER"}
 {
 	alwaysDispatchEvents = configHandler->GetBool("AlwaysSendDrawGroundEvents");
-	drawerMode = (configHandler->GetInt("ROAM") != 0)? SMF_MESHDRAWER_ROAM: SMF_MESHDRAWER_BASIC;
+	drawerMode = SMF_MESHDRAWER_BASIC;
 	groundDetail = configHandler->GetInt("GroundDetail");
 
 	groundTextures = new CSMFGroundTextures(smfMap);
@@ -122,9 +112,6 @@ CSMFGroundDrawer::CSMFGroundDrawer(CSMFReadMap* rm)
 
 CSMFGroundDrawer::~CSMFGroundDrawer()
 {
-	// remember which ROAM-mode was enabled (if any)
-	configHandler->Set("ROAM", (dynamic_cast<CRoamMeshDrawer*>(meshDrawer) != nullptr)? 1: 0);
-
 	smfRenderStates[RENDER_STATE_SSP]->Kill(); ISMFRenderState::FreeInstance(smfRenderStates[RENDER_STATE_SSP]);
 	smfRenderStates[RENDER_STATE_LUA]->Kill(); ISMFRenderState::FreeInstance(smfRenderStates[RENDER_STATE_LUA]);
 	smfRenderStates[RENDER_STATE_NOP]->Kill(); ISMFRenderState::FreeInstance(smfRenderStates[RENDER_STATE_NOP]);
@@ -156,13 +143,10 @@ IMeshDrawer* CSMFGroundDrawer::SwitchMeshDrawer(int wantedMode)
 		case SMF_MESHDRAWER_LEGACY: {
 			LOG("Legacy Mesh Renderer is no longer available");
 		} [[fallthrough]];
-		case SMF_MESHDRAWER_BASIC: {
+		case SMF_MESHDRAWER_BASIC:
+		default: {
 			LOG("Switching to Basic Mesh Rendering");
 			meshDrawer = new CBasicMeshDrawer(this);
-		} break;
-		default: {
-			LOG("Switching to ROAM Mesh Rendering");
-			meshDrawer = new CRoamMeshDrawer(this);
 		} break;
 	}
 
@@ -477,11 +461,11 @@ bool CSMFGroundDrawer::UpdateGeometryBuffer(bool init)
 
 void CSMFGroundDrawer::SetDetail(int newGroundDetail)
 {
-	const int minGroundDetail = MIN_GROUND_DETAIL[drawerMode == SMF_MESHDRAWER_ROAM];
-	const int maxGroundDetail = MAX_GROUND_DETAIL[drawerMode == SMF_MESHDRAWER_ROAM];
+	const int minGroundDetail = 0;
+	const int maxGroundDetail = CBasicMeshDrawer::LOD_LEVELS - 1;
 
 	configHandler->Set("GroundDetail", groundDetail = Clamp(newGroundDetail, minGroundDetail, maxGroundDetail));
-	LOG("GroundDetail%s set to %i", ((drawerMode != SMF_MESHDRAWER_ROAM)? "[Bias]": ""), groundDetail);
+	LOG("GroundDetail%s set to %i", "[Bias]", groundDetail);
 }
 
 

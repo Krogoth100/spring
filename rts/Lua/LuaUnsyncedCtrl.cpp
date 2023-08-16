@@ -41,7 +41,6 @@
 #include "Map/BaseGroundDrawer.h"
 #include "Map/BaseGroundTextures.h"
 #include "Map/SMF/SMFGroundDrawer.h"
-#include "Map/SMF/ROAM/RoamMeshDrawer.h"
 #include "Net/Protocol/NetProtocol.h"
 #include "Net/GameServer.h"
 #include "Rendering/Env/ISky.h"
@@ -3884,24 +3883,7 @@ int LuaUnsyncedCtrl::SetMapRenderingParams(lua_State* L)
  */
 int LuaUnsyncedCtrl::ForceTesselationUpdate(lua_State* L)
 {
-	CSMFGroundDrawer* smfDrawer = dynamic_cast<CSMFGroundDrawer*>(readMap->GetGroundDrawer());
-
-	if (smfDrawer == nullptr) {
-		lua_pushboolean(L, false);
-		return 1;
-	}
-
-	CRoamMeshDrawer* roamMeshDrawer = dynamic_cast<CRoamMeshDrawer*>(smfDrawer->GetMeshDrawer());
-	if (roamMeshDrawer == nullptr) {
-		lua_pushboolean(L, false);
-		return 1;
-	}
-
-	CRoamMeshDrawer::ForceNextTesselation(
-		luaL_optboolean(L, 1, true ),
-		luaL_optboolean(L, 2, false)
-	);
-
+	// todo: ROAM cleanup
 	lua_pushboolean(L, true);
 	return 1;
 }

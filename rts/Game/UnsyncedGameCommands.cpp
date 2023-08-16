@@ -56,8 +56,6 @@
 #include "Map/MetalMap.h"
 #include "Map/ReadMap.h"
 #include "Map/SMF/SMFGroundDrawer.h"
-#include "Map/SMF/ROAM/Patch.h"
-#include "Map/SMF/ROAM/RoamMeshDrawer.h"
 
 #include "Net/GameServer.h"
 #include "Net/Protocol/NetProtocol.h"
@@ -249,35 +247,6 @@ public:
 	}
 };
 
-
-
-class MapMeshDrawerActionExecutor : public IUnsyncedActionExecutor {
-public:
-	MapMeshDrawerActionExecutor() : IUnsyncedActionExecutor("mapmeshdrawer", "Switch map-mesh rendering modes: 0=GCM, 1=HLOD, 2=ROAM") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		CSMFGroundDrawer* smfDrawer = dynamic_cast<CSMFGroundDrawer*>(readMap->GetGroundDrawer());
-
-		if (smfDrawer == nullptr)
-			return false;
-
-		if (action.GetArgs().empty()) {
-			smfDrawer->SwitchMeshDrawer();
-			return true;
-		}
-
-		auto args = CSimpleParser::Tokenize(action.GetArgs());
-		bool parseFailure;
-
-		int smfMeshDrawerArg = (!args.empty()) ? StringToInt(args[0], &parseFailure) : -1.0;
-		if (parseFailure) smfMeshDrawerArg = -1.0;
-
-		smfDrawer->SwitchMeshDrawer(smfMeshDrawerArg);
-
-		return true;
-	}
-};
 
 
 class MapBorderActionExecutor : public IUnsyncedActionExecutor {
@@ -3805,7 +3774,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<ShadowsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DumpShadowsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<MapShadowPolyOffsetActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<MapMeshDrawerActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<MapBorderActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WaterActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<AdvModelShadingActionExecutor>()); // [maint]
