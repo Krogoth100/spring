@@ -6,7 +6,6 @@
 #include "MapDrawPassTypes.h"
 
 
-class CBaseGroundTextures;
 class CCamera;
 
 namespace GL {
@@ -58,8 +57,6 @@ public:
 	bool& UseAdvShadingRef() { return advShading; }
 	bool& WireFrameModeRef() { return wireframe; }
 
-	CBaseGroundTextures* GetGroundTextures() { return groundTextures; }
-
 public:
 	float LODScaleReflection;
 	float LODScaleRefraction;
@@ -77,8 +74,6 @@ public:
 	static const int losColorScale = 10000;
 
 protected:
-	CBaseGroundTextures* groundTextures;
-
 	bool drawForward;
 	bool drawDeferred;
 	bool drawMapEdges;

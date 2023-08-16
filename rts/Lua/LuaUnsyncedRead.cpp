@@ -30,7 +30,6 @@
 #include "Game/UI/MouseHandler.h"
 #include "Game/UI/PlayerRoster.h"
 #include "Map/BaseGroundDrawer.h"
-#include "Map/BaseGroundTextures.h"
 #include "Map/Ground.h"
 #include "Map/ReadMap.h"
 #include "Menu/LuaMenuController.h"
@@ -2524,12 +2523,7 @@ int LuaUnsyncedRead::GetMapSquareTexture(lua_State* L)
 	const std::string& texName = luaL_checkstring(L, 4);
 
 	CBaseGroundDrawer* groundDrawer = readMap->GetGroundDrawer();
-	CBaseGroundTextures* groundTextures = groundDrawer->GetGroundTextures();
 
-	if (groundTextures == nullptr) {
-		lua_pushboolean(L, false);
-		return 1;
-	}
 	if (texName.empty()) {
 		lua_pushboolean(L, false);
 		return 1;
@@ -2554,7 +2548,6 @@ int LuaUnsyncedRead::GetMapSquareTexture(lua_State* L)
 		return 1;
 	}
 
-	lua_pushboolean(L, groundTextures->GetSquareLuaTexture(texSquareX, texSquareY, tid, txs, tys, texMipLevel));
 	return 1;
 }
 

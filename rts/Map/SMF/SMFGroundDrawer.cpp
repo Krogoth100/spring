@@ -2,7 +2,6 @@
 
 #include "SMFReadMap.h"
 #include "SMFGroundDrawer.h"
-#include "SMFGroundTextures.h"
 #include "SMFRenderState.h"
 #include "Game/Camera.h"
 #include "Map/MapInfo.h"
@@ -61,7 +60,6 @@ CSMFGroundDrawer::CSMFGroundDrawer(CSMFReadMap* rm)
 	drawerMode = SMF_MESHDRAWER_BASIC;
 	groundDetail = configHandler->GetInt("GroundDetail");
 
-	groundTextures = new CSMFGroundTextures(smfMap);
 	meshDrawer = SwitchMeshDrawer(drawerMode);
 
 	smfRenderStates = { nullptr };
@@ -120,7 +118,6 @@ CSMFGroundDrawer::~CSMFGroundDrawer()
 
 	shaderHandler->ReleaseProgramObject("[SMFGroundDrawer]", "Border");
 
-	spring::SafeDelete(groundTextures);
 	spring::SafeDelete(meshDrawer);
 }
 
@@ -403,7 +400,6 @@ void CSMFGroundDrawer::SetLuaShader(const LuaMapShaderData* luaMapShaderData)
 void CSMFGroundDrawer::SetupBigSquare(const DrawPass::e& drawPass, const int bigSquareX, const int bigSquareY)
 {
 	if (drawPass != DrawPass::Shadow) {
-		groundTextures->BindSquareTexture(bigSquareX, bigSquareY);
 		smfRenderStates[RENDER_STATE_SEL]->SetSquareTexGen(bigSquareX, bigSquareY);
 
 		if (borderShader && borderShader->IsBound()) {
@@ -424,7 +420,6 @@ void CSMFGroundDrawer::Update()
 	if (readMap->HasOnlyVoidWater())
 		return;
 
-	groundTextures->DrawUpdate();
 	// done by DrawMesh; needs to know the actual draw-pass
 	// meshDrawer->Update();
 

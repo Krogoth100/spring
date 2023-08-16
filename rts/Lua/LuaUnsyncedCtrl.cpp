@@ -39,7 +39,6 @@
 #include "Map/MapInfo.h"
 #include "Map/ReadMap.h"
 #include "Map/BaseGroundDrawer.h"
-#include "Map/BaseGroundTextures.h"
 #include "Map/SMF/SMFGroundDrawer.h"
 #include "Net/Protocol/NetProtocol.h"
 #include "Net/GameServer.h"
@@ -1768,6 +1767,7 @@ int LuaUnsyncedCtrl::SetMapShader(lua_State* L)
  * @string luaTexName
  * @treturn bool success
  */
+// todo: remove
 int LuaUnsyncedCtrl::SetMapSquareTexture(lua_State* L)
 {
 	if (CLuaHandle::GetHandleSynced(L))
@@ -1778,15 +1778,8 @@ int LuaUnsyncedCtrl::SetMapSquareTexture(lua_State* L)
 	const std::string& texName = luaL_checkstring(L, 3);
 
 	CBaseGroundDrawer* groundDrawer = readMap->GetGroundDrawer();
-	CBaseGroundTextures* groundTextures = groundDrawer->GetGroundTextures();
 
-	if (groundTextures == nullptr) {
-		lua_pushboolean(L, false);
-		return 1;
-	}
 	if (texName.empty()) {
-		// restore default texture for this square
-		lua_pushboolean(L, groundTextures->SetSquareLuaTexture(texSquareX, texSquareY, 0));
 		return 1;
 	}
 
@@ -1802,7 +1795,6 @@ int LuaUnsyncedCtrl::SetMapSquareTexture(lua_State* L)
 			return 1;
 		}
 
-		lua_pushboolean(L, groundTextures->SetSquareLuaTexture(texSquareX, texSquareY, luaTexture->id));
 		return 1;
 	}
 
@@ -1813,7 +1805,6 @@ int LuaUnsyncedCtrl::SetMapSquareTexture(lua_State* L)
 			return 1;
 		}
 
-		lua_pushboolean(L, groundTextures->SetSquareLuaTexture(texSquareX, texSquareY, namedTexture->id));
 		return 1;
 	}
 
