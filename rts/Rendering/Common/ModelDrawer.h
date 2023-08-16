@@ -361,7 +361,7 @@ inline void CModelDrawerBase<TDrawerData, TDrawer>::DrawOpaquePassImpl(bool defe
 
 	SetupOpaqueDrawing(deferredPass);
 
-	for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; ++modelType) {
+	for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; ++modelType) {
 		if (modelDrawerData->GetModelRenderer(modelType).empty())
 			continue;
 
@@ -390,7 +390,7 @@ inline void CModelDrawerBase<TDrawerData, TDrawer>::DrawAlphaPassImpl(bool drawR
 
 	SetupAlphaDrawing(false);
 
-	for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; ++modelType) {
+	for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; ++modelType) {
 		if (modelDrawerData->GetModelRenderer(modelType).empty())
 			continue;
 
@@ -442,7 +442,7 @@ inline void CModelDrawerBase<TDrawerData, TDrawer>::DrawShadowPassImpl() const
 		// (usually) holes, so disable backface
 		// culling for them
 		// glDisable(GL_CULL_FACE); Draw(); glEnable(GL_CULL_FACE);
-		for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; ++modelType) {
+		for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; ++modelType) {
 			if (modelDrawerData->GetModelRenderer(modelType).empty())
 				continue;
 

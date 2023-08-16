@@ -556,13 +556,13 @@ bool LuaObjectDrawer::DrawSingleObjectCommon(const CSolidObject* obj, LuaObjType
 
 	switch (objType) {
 		case LUAOBJ_UNIT: {
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				luaMatHandler.setupDrawStateFuncs[modelType] = SetupOpaqueUnitDrawState;
 				luaMatHandler.resetDrawStateFuncs[modelType] = ResetOpaqueUnitDrawState;
 			}
 		} break;
 		case LUAOBJ_FEATURE: {
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				luaMatHandler.setupDrawStateFuncs[modelType] = SetupOpaqueFeatureDrawState;
 				luaMatHandler.resetDrawStateFuncs[modelType] = ResetOpaqueFeatureDrawState;
 			}
@@ -662,13 +662,13 @@ void LuaObjectDrawer::DrawOpaqueMaterialObjects(LuaObjType objType, bool deferre
 {
 	switch (objType) {
 		case LUAOBJ_UNIT: {
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				luaMatHandler.setupDrawStateFuncs[modelType] = SetupOpaqueUnitDrawState;
 				luaMatHandler.resetDrawStateFuncs[modelType] = ResetOpaqueUnitDrawState;
 			}
 		} break;
 		case LUAOBJ_FEATURE: {
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				luaMatHandler.setupDrawStateFuncs[modelType] = SetupOpaqueFeatureDrawState;
 				luaMatHandler.resetDrawStateFuncs[modelType] = ResetOpaqueFeatureDrawState;
 			}
@@ -685,13 +685,13 @@ void LuaObjectDrawer::DrawAlphaMaterialObjects(LuaObjType objType, bool)
 {
 	switch (objType) {
 		case LUAOBJ_UNIT: {
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				luaMatHandler.setupDrawStateFuncs[modelType] = SetupAlphaUnitDrawState;
 				luaMatHandler.resetDrawStateFuncs[modelType] = ResetAlphaUnitDrawState;
 			}
 		} break;
 		case LUAOBJ_FEATURE: {
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				luaMatHandler.setupDrawStateFuncs[modelType] = SetupAlphaFeatureDrawState;
 				luaMatHandler.resetDrawStateFuncs[modelType] = ResetAlphaFeatureDrawState;
 			}
@@ -709,13 +709,13 @@ void LuaObjectDrawer::DrawShadowMaterialObjects(LuaObjType objType, bool)
 {
 	switch (objType) {
 		case LUAOBJ_UNIT: {
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				luaMatHandler.setupDrawStateFuncs[modelType] = SetupShadowUnitDrawState;
 				luaMatHandler.resetDrawStateFuncs[modelType] = ResetShadowUnitDrawState;
 			}
 		} break;
 		case LUAOBJ_FEATURE: {
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				luaMatHandler.setupDrawStateFuncs[modelType] = SetupShadowFeatureDrawState;
 				luaMatHandler.resetDrawStateFuncs[modelType] = ResetShadowFeatureDrawState;
 			}

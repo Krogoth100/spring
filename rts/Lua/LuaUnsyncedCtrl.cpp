@@ -4395,10 +4395,6 @@ int LuaUnsyncedCtrl::LoadModelTextures(lua_State* L)
 
 	for (S3DModel& model : modelLoader.GetModelsVec()) {
 		if (model.name == modelName) {
-			if (model.type == MODELTYPE_3DO) {
-				lua_pushboolean(L, false);
-				return 1;
-			}
 			textureHandlerS3O.LoadTexture(&model);
 			lua_pushboolean(L, true);
 			return 1;

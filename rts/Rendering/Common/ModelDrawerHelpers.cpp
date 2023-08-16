@@ -179,54 +179,9 @@ void CModelDrawerHelper::PopModelRenderState(const CSolidObject* o) { PopModelRe
 ///////////////////////////////////////////////////////////////////////////
 
 const std::array<const CModelDrawerHelper*, MODELTYPE_CNT> CModelDrawerHelper::modelDrawerHelpers = {
-	CModelDrawerHelper::GetInstance<CModelDrawerHelper3DO>(),
 	CModelDrawerHelper::GetInstance<CModelDrawerHelperS3O>(),
 	CModelDrawerHelper::GetInstance<CModelDrawerHelperASS>(),
 };
-
-///////////////////////////////////////////////////////////////////////////
-
-void CModelDrawerHelper3DO::PushRenderState() const
-{
-	glDisable(GL_CULL_FACE);
-}
-
-void CModelDrawerHelper3DO::PopRenderState() const
-{
-	glEnable(GL_CULL_FACE);
-}
-
-void CModelDrawerHelper3DO::BindOpaqueTex(const CS3OTextureHandler::S3OTexMat* textureMat) const
-{
-	// todo: 3do texture cleanup
-	/*glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex2ID());
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex1ID());*/
-}
-
-void CModelDrawerHelper3DO::UnbindOpaqueTex() const
-{
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void CModelDrawerHelper3DO::BindShadowTex(const CS3OTextureHandler::S3OTexMat* textureMat) const
-{
-	// todo: 3do texture cleanup
-	/*glActiveTexture(GL_TEXTURE0);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex2ID());*/
-}
-
-void CModelDrawerHelper3DO::UnbindShadowTex() const
-{
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0);
-}
 
 ///////////////////////////////////////////////////////////////////////////
 

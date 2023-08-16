@@ -55,17 +55,6 @@ public:
 	static const std::array<const CModelDrawerHelper*, MODELTYPE_CNT> modelDrawerHelpers;
 };
 
-class CModelDrawerHelper3DO : public CModelDrawerHelper {
-public:
-	// Inherited via CModelDrawerHelper
-	void PushRenderState() const override;
-	void PopRenderState() const override;
-	void BindOpaqueTex(const CS3OTextureHandler::S3OTexMat* textureMat) const override;
-	void UnbindOpaqueTex() const override;
-	void BindShadowTex(const CS3OTextureHandler::S3OTexMat* textureMat) const override;
-	void UnbindShadowTex() const override;
-};
-
 class CModelDrawerHelperS3O : public CModelDrawerHelper {
 public:
 	// Inherited via CModelDrawerHelper

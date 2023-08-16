@@ -677,7 +677,7 @@ void CProjectileDrawer::DrawProjectileShadow(CProjectile* p)
 
 void CProjectileDrawer::DrawProjectilesMiniMap()
 {
-	for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+	for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 		const auto& mdlRenderer = modelRenderers[modelType];
 		// const auto& projBinKeys = mdlRenderer.GetObjectBinKeys();
 
@@ -767,7 +767,7 @@ void CProjectileDrawer::Draw(bool drawReflection, bool drawRefraction) {
 			ScopedModelDrawerImpl<CUnitDrawer> legacy(true, false);
 			unitDrawer->SetupOpaqueDrawing(false);
 
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				CModelDrawerHelper::PushModelRenderState(modelType);
 				DrawProjectiles(modelType, drawReflection, drawRefraction);
 				CModelDrawerHelper::PopModelRenderState(modelType);
@@ -855,7 +855,7 @@ void CProjectileDrawer::DrawShadowPassOpaque()
 	glDisable(GL_TEXTURE_2D);
 	po->Enable();
 	{
-		for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+		for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 			DrawProjectilesShadow(modelType);
 		}
 	}

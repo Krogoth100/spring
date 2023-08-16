@@ -61,7 +61,6 @@ public:
 
 	void Load(S3DModel& model, const std::string& name) override;
 
-private:
 	SS3OPiece* AllocPiece();
 	SS3OPiece* LoadPiece(S3DModel*, SS3OPiece*, std::vector<uint8_t>& buf, int offset);
 

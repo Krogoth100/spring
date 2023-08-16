@@ -136,7 +136,7 @@ CUnitDrawerData::~CUnitDrawerData()
 	}
 
 	for (int allyTeam = 0; allyTeam < savedData.deadGhostBuildings.size(); ++allyTeam) {
-		for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+		for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 			auto& lgb = savedData.liveGhostBuildings[allyTeam][modelType];
 			auto& dgb = savedData.deadGhostBuildings[allyTeam][modelType];
 
@@ -163,7 +163,7 @@ void CUnitDrawerData::Update()
 {
 	iconSizeBase = std::max(1.0f, std::max(globalRendering->viewSizeX, globalRendering->viewSizeY) * iconSizeMult * iconScale);
 
-	for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+	for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 		UpdateTempDrawUnits(savedData.tempOpaqueUnits[modelType]);
 		UpdateTempDrawUnits(savedData.tempAlphaUnits[modelType]);
 	}
@@ -213,7 +213,7 @@ void CUnitDrawerData::Update()
 void CUnitDrawerData::UpdateGhostedBuildings()
 {
 	for (int allyTeam = 0; allyTeam < savedData.deadGhostBuildings.size(); ++allyTeam) {
-		for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+		for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 			auto& dgb = savedData.deadGhostBuildings[allyTeam][modelType];
 
 			for (int i = 0; i < dgb.size(); /*no-op*/) {
