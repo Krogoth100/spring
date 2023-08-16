@@ -224,35 +224,6 @@ bool S3DOPiece::IsBasePlate(const S3DOPrimitive* face) const
 }
 
 
-C3DOTextureHandler::UnitTexture* S3DOPiece::GetTexture(
-	const TA3DO::_Primitive* p,
-	const std::vector<unsigned char>& fileBuf,
-	const spring::unordered_set<std::string>& teamTextures
-) const {
-	std::string texName;
-
-	if (p->OffsetToTextureName != 0) {
-		int unused;
-		texName = std::move(StringToLower(GET_TEXT(p->OffsetToTextureName, fileBuf, unused)));
-
-		if (teamTextures.find(texName) == teamTextures.end()) {
-			texName += "00";
-		}
-	} else {
-		texName = "ta_color" + IntToString(p->PaletteEntry, "%i");
-	}
-
-	auto tex = textureHandler3DO.Get3DOTexture(texName);
-	if (tex != nullptr)
-		return tex;
-
-	LOG_L(L_WARNING, "[%s] unknown 3DO texture \"%s\" for piece \"%s\"", __func__, texName.c_str(), name.c_str());
-
-	// assign a dummy texture (the entire atlas)
-	return textureHandler3DO.Get3DOTexture("___dummy___");
-}
-
-
 void S3DOPiece::GetPrimitives(
 	const S3DModel* model,
 	int pos,
@@ -288,9 +259,6 @@ void S3DOPiece::GetPrimitives(
 			swabWordInPlace(w);
 			sp.indices[b] = w;
 		}
-
-		// find texture
-		sp.texture = GetTexture(&p, fileBuf, teamTextures);
 
 		// set the primitive-normal
 		const float3 v0v1 = (verts[sp.indices[1]] - verts[sp.indices[0]]);
@@ -405,7 +373,7 @@ void S3DOPiece::PostProcessGeometry(uint32_t pieceIndex)
 	vertices.reserve(prims.size() * 4);
 
 	// trianglize all input
-	for (const S3DOPrimitive& ps: prims) {
+	/*for (const S3DOPrimitive& ps: prims) {
 		C3DOTextureHandler::UnitTexture* tex = ps.texture;
 
 		if (ps.indices.size() == 4) {
@@ -439,7 +407,7 @@ void S3DOPiece::PostProcessGeometry(uint32_t pieceIndex)
 				vertices.emplace_back(verts[ps.indices[i]], ps.vnormals[i], float3{}, float3{}, float2(tex->xstart, tex->ystart), float2{});
 			}
 		}
-	}
+	}*/
 
 	S3DModelPiece::PostProcessGeometry(pieceIndex);
 

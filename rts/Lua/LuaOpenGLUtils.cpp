@@ -23,7 +23,6 @@
 #include "Rendering/Map/InfoTexture/InfoTexture.h"
 #include "Rendering/Textures/NamedTextures.h"
 #include "Rendering/Textures/TextureAtlas.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
 #include "Rendering/Env/Particles/ProjectileDrawer.h"
 #include "Sim/Features/FeatureDef.h"
@@ -54,11 +53,6 @@ void LuaOpenGLUtils::ResetState()
 LuaMatTexture::Type LuaOpenGLUtils::GetLuaMatTextureType(const std::string& name)
 {
 	switch (hashString(name.c_str())) {
-		// atlases
-		case hashString("$units" ): { return LuaMatTexture::LUATEX_3DOTEXTURE; } break;
-		case hashString("$units1"): { return LuaMatTexture::LUATEX_3DOTEXTURE; } break;
-		case hashString("$units2"): { return LuaMatTexture::LUATEX_3DOTEXTURE; } break;
-
 		// cubemaps
 		case hashString(      "$specular"): { return LuaMatTexture::LUATEX_SPECULAR      ; } break;
 		case hashString(    "$reflection"): { return LuaMatTexture::LUATEX_MAP_REFLECTION; } break;
@@ -261,14 +255,15 @@ bool ParseUnitTexture(LuaMatTexture& texUnit, const std::string& texture)
 	}
 
 	if (id == 0) {
-		texUnit.type = LuaMatTexture::LUATEX_3DOTEXTURE;
+		// todo: 3do tex removal
+		/*texUnit.type = LuaMatTexture::LUATEX_3DOTEXTURE;
 
 		if (*endPtr == '0') {
 			texUnit.data = reinterpret_cast<const void*>(int(1));
 		}
 		else if (*endPtr == '1') {
 			texUnit.data = reinterpret_cast<const void*>(int(2));
-		}
+		}*/
 		return true;
 	}
 
@@ -435,20 +430,6 @@ bool LuaOpenGLUtils::ParseTextureImage(lua_State* L, LuaMatTexture& texUnit, con
 						return false;
 				} break;
 
-				case LuaMatTexture::LUATEX_3DOTEXTURE: {
-					if (image.size() == 5) {
-						// "$units"
-						texUnit.data = reinterpret_cast<const void*>(int(1));
-					} else {
-						// "$units1" or "$units2"
-						switch (image[6]) {
-							case '1': { texUnit.data = reinterpret_cast<const void*>(int(1)); } break;
-							case '2': { texUnit.data = reinterpret_cast<const void*>(int(2)); } break;
-							default: { return false; } break;
-						}
-					}
-				} break;
-
 				case LuaMatTexture::LUATEX_HEIGHTMAP: {
 					if (heightMapTexture->GetTextureID() == 0) {
 						// optional, return false when not available
@@ -524,13 +505,6 @@ GLuint LuaMatTexture::GetTextureID() const
 		} break;
 		case LUATEX_UNITTEXTURE2: {
 			texID = textureHandlerS3O.GetTexture(*reinterpret_cast<const int*>(&data))->tex2;
-		} break;
-		case LUATEX_3DOTEXTURE: {
-			if (*reinterpret_cast<const int*>(&data) == 1) {
-				texID = textureHandler3DO.GetAtlasTex1ID();
-			} else {
-				texID = textureHandler3DO.GetAtlasTex2ID();
-			}
 		} break;
 
 		// object icon-textures
@@ -691,7 +665,6 @@ GLuint LuaMatTexture::GetTextureTarget() const
 		case LUATEX_NONE:
 		case LUATEX_UNITTEXTURE1:
 		case LUATEX_UNITTEXTURE2:
-		case LUATEX_3DOTEXTURE:
 
 		case LUATEX_UNITBUILDPIC:
 		case LUATEX_UNITRADARICON:
@@ -871,9 +844,6 @@ std::tuple<int, int, int> LuaMatTexture::GetSize() const
 			const CS3OTextureHandler::S3OTexMat* texMat = textureHandlerS3O.GetTexture(*reinterpret_cast<const int*>(&data));
 			return ReturnHelper(static_cast<int>(texMat->tex2SizeX), static_cast<int>(texMat->tex2SizeY));
 		} break;
-		case LUATEX_3DOTEXTURE: {
-			return ReturnHelper(static_cast<int>(textureHandler3DO.GetAtlasTexSizeX()), static_cast<int>(textureHandler3DO.GetAtlasTexSizeY()));
-		} break;
 
 
 		case LUATEX_UNITBUILDPIC: {
@@ -1036,7 +1006,6 @@ void LuaMatTexture::Print(const string& indent) const
 		STRING_CASE(typeName, LUATEX_LUATEXTURE);
 		STRING_CASE(typeName, LUATEX_UNITTEXTURE1);
 		STRING_CASE(typeName, LUATEX_UNITTEXTURE2);
-		STRING_CASE(typeName, LUATEX_3DOTEXTURE);
 		STRING_CASE(typeName, LUATEX_UNITBUILDPIC);
 		STRING_CASE(typeName, LUATEX_UNITRADARICON);
 

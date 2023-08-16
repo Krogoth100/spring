@@ -9,7 +9,6 @@
 #include "3DModel.h"
 #include "IModelParser.h"
 
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "System/float3.h"
 #include "System/UnorderedSet.hpp"
 
@@ -53,8 +52,6 @@ struct S3DOPrimitive
 	// the raw normal for this primitive (-v0v1.cross(v0v2))
 	// used iff we have less than 3 or more than 4 vertices
 	float3 primNormal;
-
-	C3DOTextureHandler::UnitTexture* texture = nullptr;
 };
 
 
@@ -113,12 +110,6 @@ public:
 
 	bool IsBasePlate(const S3DOPrimitive* face) const;
 
-	C3DOTextureHandler::UnitTexture* GetTexture(
-		const TA3DO::_Primitive* p,
-		const std::vector<unsigned char>& fileBuf,
-		const spring::unordered_set<std::string>& teamTextures
-	) const;
-
 public:
 	std::vector<float3> verts; //FIXME
 	std::vector<S3DOPrimitive> prims;
@@ -140,7 +131,6 @@ public:
 	S3DOPiece* LoadPiece(S3DModel* model, S3DOPiece* parent, const std::vector<uint8_t>& buf, int pos);
 
 private:
-	C3DOTextureHandler::UnitTexture* GetTexture(S3DOPiece* obj, TA3DO::_Primitive* p, const std::vector<unsigned char>& fileBuf) const;
 	static bool IsBasePlate(S3DOPiece* obj, S3DOPrimitive* face);
 
 private:

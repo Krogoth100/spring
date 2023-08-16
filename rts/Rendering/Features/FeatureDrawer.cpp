@@ -20,7 +20,6 @@
 #include "Rendering/Shaders/Shader.h"
 #include "Rendering/Common/ModelDrawerHelpers.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Models/3DModelVAO.h"
 #include "Rendering/Models/ModelsMemStorage.h"
 #include "Sim/Features/Feature.h"

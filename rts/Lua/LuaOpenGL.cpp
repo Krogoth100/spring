@@ -64,7 +64,6 @@
 #include "Rendering/Textures/TextureFormat.h"
 #include "Rendering/Textures/TextureAtlas.h"
 #include "Rendering/Textures/NamedTextures.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
 #include "Rendering/Env/Particles/ProjectileDrawer.h"
 #include "Sim/Features/Feature.h"
@@ -5269,7 +5268,7 @@ int LuaOpenGL::GetQuery(lua_State* L)
 
 int LuaOpenGL::GetGlobalTexNames(lua_State* L)
 {
-	CondWarnDeprecatedGL(L, __func__);
+	/*CondWarnDeprecatedGL(L, __func__);
 	const auto& textures = textureHandler3DO.GetAtlasTextures();
 
 	lua_createtable(L, textures.size(), 0);
@@ -5278,13 +5277,14 @@ int LuaOpenGL::GetGlobalTexNames(lua_State* L)
 		lua_pushsstring(L, it->first);
 		lua_rawseti(L, -2, count++);
 	}
-	return 1;
+	return 1;*/
+	return 0;
 }
 
 
 int LuaOpenGL::GetGlobalTexCoords(lua_State* L)
 {
-	CondWarnDeprecatedGL(L, __func__);
+	/*CondWarnDeprecatedGL(L, __func__);
 	const C3DOTextureHandler::UnitTexture* texCoords = textureHandler3DO.Get3DOTexture(luaL_checkstring(L, 1));
 
 	if (texCoords == nullptr)
@@ -5294,7 +5294,8 @@ int LuaOpenGL::GetGlobalTexCoords(lua_State* L)
 	lua_pushnumber(L, texCoords->ystart);
 	lua_pushnumber(L, texCoords->xend);
 	lua_pushnumber(L, texCoords->yend);
-	return 4;
+	return 4;*/
+	return 0;
 }
 
 

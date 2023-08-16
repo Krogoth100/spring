@@ -16,7 +16,6 @@
 #include "Rendering/Env/ISky.h"
 #include "Rendering/Shaders/ShaderHandler.h"
 #include "Rendering/Shaders/Shader.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
 
 namespace GL { struct GeometryBuffer; }

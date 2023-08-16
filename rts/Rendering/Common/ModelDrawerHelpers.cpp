@@ -7,7 +7,6 @@
 #include "Sim/Misc/Team.h"
 #include "Sim/Objects/SolidObject.h"
 #include "Rendering/ShadowHandler.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Env/CubeMapHandler.h"
 
 bool CModelDrawerHelper::ObjectVisibleReflection(const float3& objPos, const float3& camPos, float maxRadius)
@@ -199,10 +198,11 @@ void CModelDrawerHelper3DO::PopRenderState() const
 
 void CModelDrawerHelper3DO::BindOpaqueTex(const CS3OTextureHandler::S3OTexMat* textureMat) const
 {
-	glActiveTexture(GL_TEXTURE1);
+	// todo: 3do texture cleanup
+	/*glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex2ID());
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex1ID());
+	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex1ID());*/
 }
 
 void CModelDrawerHelper3DO::UnbindOpaqueTex() const
@@ -215,9 +215,10 @@ void CModelDrawerHelper3DO::UnbindOpaqueTex() const
 
 void CModelDrawerHelper3DO::BindShadowTex(const CS3OTextureHandler::S3OTexMat* textureMat) const
 {
-	glActiveTexture(GL_TEXTURE0);
+	// todo: 3do texture cleanup
+	/*glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex2ID());
+	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex2ID());*/
 }
 
 void CModelDrawerHelper3DO::UnbindShadowTex() const

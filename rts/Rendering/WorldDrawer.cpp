@@ -31,7 +31,6 @@
 #include "Rendering/Models/ModelsLock.h"
 #include "Rendering/Shaders/ShaderHandler.h"
 #include "Rendering/Textures/ColorMap.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
 #include "Map/BaseGroundDrawer.h"
 #include "Map/HeightMapTexture.h"
@@ -65,7 +64,6 @@ void CWorldDrawer::InitPre() const
 	modelLoader.Init();
 
 	loadscreen->SetLoadMessage("Creating Unit Textures");
-	textureHandler3DO.Init();
 	textureHandlerS3O.Init();
 
 	loadscreen->SetLoadMessage("Creating Sky");
@@ -189,7 +187,6 @@ void CWorldDrawer::Kill()
 
 	spring::SafeDelete(heightMapTexture);
 
-	textureHandler3DO.Kill();
 	textureHandlerS3O.Kill();
 
 	readMap->KillGroundDrawer();
