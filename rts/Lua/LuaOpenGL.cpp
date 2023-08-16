@@ -65,7 +65,6 @@
 #include "Rendering/Textures/TextureAtlas.h"
 #include "Rendering/Textures/NamedTextures.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
-#include "Rendering/Env/Particles/ProjectileDrawer.h"
 #include "Sim/Features/Feature.h"
 #include "Sim/Features/FeatureDef.h"
 #include "Sim/Features/FeatureDefHandler.h"
@@ -4095,12 +4094,6 @@ int LuaOpenGL::GetEngineAtlasTextures(lua_State* L) {
 	const std::string atlasName = luaL_checksstring(L, 1).c_str();
 	switch (hashString(atlasName.c_str()))
 	{
-	case hashString("$explosions"): {
-		return pushFunc(projectileDrawer->textureAtlas->GetTextures());
-	} break;
-	case hashString("$groundfx"): {
-		return pushFunc(projectileDrawer->groundFXAtlas->GetTextures());
-	} break;
 	default:
 		luaL_error(L, "[%s] Invalid engine atlas (%s) is specified (only $explosions and $groundfx are supported)", __func__, atlasName.c_str());
 		return 0;

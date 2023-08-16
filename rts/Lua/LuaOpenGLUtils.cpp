@@ -24,7 +24,6 @@
 #include "Rendering/Textures/NamedTextures.h"
 #include "Rendering/Textures/TextureAtlas.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
-#include "Rendering/Env/Particles/ProjectileDrawer.h"
 #include "Sim/Features/FeatureDef.h"
 #include "Sim/Features/FeatureDefHandler.h"
 #include "Sim/Units/UnitDef.h"
@@ -606,9 +605,6 @@ GLuint LuaMatTexture::GetTextureID() const
 			texID = smallFont->GetTexture();
 		} break;
 
-		case LUATEX_EXPLOSIONS_ATLAS: { texID = projectileDrawer->textureAtlas->GetTexID();  } break;
-		case LUATEX_GROUNDFX_ATLAS:   { texID = projectileDrawer->groundFXAtlas->GetTexID(); } break;
-
 		default: {
 			assert(false);
 		} break;
@@ -957,15 +953,6 @@ std::tuple<int, int, int> LuaMatTexture::GetSize() const
 			return ReturnHelper(     font->GetTextureWidth(),      font->GetTextureHeight());
 		case LUATEX_FONTSMALL:
 			return ReturnHelper(smallFont->GetTextureWidth(), smallFont->GetTextureHeight());
-
-		case LUATEX_EXPLOSIONS_ATLAS: {
-			auto sz = projectileDrawer->textureAtlas->GetSize();
-			return ReturnHelper(sz.x, sz.y);
-		} break;
-		case LUATEX_GROUNDFX_ATLAS: {
-			auto sz = projectileDrawer->groundFXAtlas->GetSize();
-			return ReturnHelper(sz.x, sz.y);
-		} break;
 
 		case LUATEX_NONE:
 		default: break;

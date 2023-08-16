@@ -3563,38 +3563,12 @@ public:
 			LOG("Reloading SMF textures");
 			readMap->ReloadTextures();
 		};
-		auto cegFunc = []() {
-			LOG("Reloading CEG textures");
-			projectileDrawer->textureAtlas->ReloadTextures();
-			projectileDrawer->groundFXAtlas->ReloadTextures();
-		};
 
 		std::array argsExec = {
 			ArgTuple(hashString("lua") , false, luaFunc),
 			ArgTuple(hashString("s3o") , false, s3oFunc),
 			ArgTuple(hashString("ssmf"), false, smfFunc),
 			ArgTuple(hashString("smf") , false, smfFunc),
-			ArgTuple(hashString("cegs"), false, cegFunc),
-			ArgTuple(hashString("ceg") , false, cegFunc),
-		};
-
-		auto args = CSimpleParser::Tokenize(action.GetArgs(), 1);
-		return GenericArgsExecutor(args, argsExec);
-	}
-};
-
-class DumpAtlasActionExecutor : public IUnsyncedActionExecutor {
-public:
-	DumpAtlasActionExecutor() : IUnsyncedActionExecutor("DumpAtlas", "Save Some Atlases") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		std::array argsExec = {
-			ArgTuple(hashString("proj"), false, []() {
-				LOG("Dumping projectile textures");
-				projectileDrawer->textureAtlas->DumpTexture("TextureAtlas");
-				projectileDrawer->groundFXAtlas->DumpTexture("GroundFXAtlas");
-			}),
 		};
 
 		auto args = CSimpleParser::Tokenize(action.GetArgs(), 1);
@@ -4012,7 +3986,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<SaveActionExecutor>(false));
 	AddActionExecutor(AllocActionExecutor<ReloadShadersActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ReloadTexturesActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<DumpAtlasActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DebugInfoActionExecutor>());
 
 	// XXX are these redirects really required?

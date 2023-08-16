@@ -11,7 +11,6 @@
 #include "Map/ReadMap.h"
 #include "Rendering/GlobalRendering.h"
 #include "Rendering/Features/FeatureDrawer.h"
-#include "Rendering/Env/Particles/ProjectileDrawer.h"
 #include "Rendering/Units/UnitDrawer.h"
 #include "Rendering/Env/GrassDrawer.h"
 #include "Rendering/Env/ISky.h"
@@ -467,9 +466,6 @@ void CShadowHandler::DrawShadowPasses()
 		grassDrawer->DrawShadow();
 	}
 
-	if ((shadowGenBits & SHADOWGEN_BIT_PROJ) != 0)
-		projectileDrawer->DrawShadowPassOpaque();
-
 	if ((shadowGenBits & SHADOWGEN_BIT_MODEL) != 0) {
 		unitDrawer->DrawShadowPass();
 		featureDrawer->DrawShadowPass();
@@ -493,8 +489,8 @@ void CShadowHandler::DrawShadowPasses()
 		readMap->GetGroundDrawer()->DrawShadowPass();
 
 	//transparent pass, comes last
+	// todo: proj render cleanup
 	if ((shadowGenBits & SHADOWGEN_BIT_PROJ) != 0) {
-		projectileDrawer->DrawShadowPassTransparent();
 		eventHandler.DrawShadowPassTransparent();
 	}
 

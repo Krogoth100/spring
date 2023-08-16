@@ -30,7 +30,6 @@
 #include "Rendering/ShadowHandler.h"
 #include "Rendering/DebugVisibilityDrawer.h"
 #include "Rendering/Map/InfoTexture/IInfoTextureHandler.h"
-#include "Rendering/Env/Particles/ProjectileDrawer.h"
 #include "Rendering/Units/UnitDrawer.h"
 #include "Rendering/GL/myGL.h"
 #include "Rendering/GL/glExtra.h"
@@ -1880,11 +1879,6 @@ void CMiniMap::DrawWorldStuff() const
 
 	glRotatef(-90.0f, +1.0f, 0.0f, 0.0f); // real 'world' coordinates
 	glScalef(1.0f, 0.0f, 1.0f); // skip the y-coord (Lua's DrawScreen is perspective and so any z-coord in it influence the x&y, too)
-
-	// draw the projectiles
-	if (drawProjectiles) {
-		projectileDrawer->DrawProjectilesMiniMap();
-	}
 
 	shadowHandler.DrawFrustumDebug();
 	DebugVisibilityDrawer::DrawMinimap();

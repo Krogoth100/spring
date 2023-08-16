@@ -217,8 +217,6 @@ void CWorldDrawer::Update(bool newSimFrame)
 	CFeatureDrawer::UpdateStatic();
 
 	if (newSimFrame) {
-		projectileDrawer->UpdateTextures();
-
 		{
 			SCOPED_TIMER("Update::WorldDrawer::{Sky,Water}");
 
@@ -308,11 +306,6 @@ void CWorldDrawer::Draw() const
 	ISky::GetSky()->Draw();
 	DrawAlphaObjects();
 
-	{
-		SCOPED_TIMER("Draw::World::Projectiles");
-		projectileDrawer->Draw(false);
-	}
-
 	ISky::GetSky()->DrawSun();
 
 	{
@@ -340,7 +333,6 @@ void CWorldDrawer::DrawOpaqueObjects() const
 			eventHandler.DrawPreDecals();
 			SCOPED_TIMER("Draw::World::Decals");
 			groundDecals->Draw();
-			projectileDrawer->DrawGroundFlashes();
 		}
 		{
 			SCOPED_TIMER("Draw::World::Foliage");

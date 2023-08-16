@@ -3,8 +3,6 @@
 
 #include "ISky.h"
 #include "NullSky.h"
-#include "SkyBox.h"
-#include "ModernSky.h"
 #include "Game/Camera.h"
 #include "Game/TraceRay.h"
 #include "Map/MapInfo.h"
@@ -56,28 +54,7 @@ void ISky::SetupFog() {
 
 void ISky::SetSky()
 {
-	sky = nullptr; //break before make
-
-	try {
-		if (globalRendering->drawDebugCubeMap) {
-			int2 dims = debugCubeMapTexture.GetDimensions();
-			sky = std::make_unique<CSkyBox>(debugCubeMapTexture.GetId(), dims.x, dims.y);
-		}
-		else if (!mapInfo->atmosphere.skyBox.empty()) {
-			sky = std::make_unique<CSkyBox>("maps/" + mapInfo->atmosphere.skyBox);
-		}
-		else {
-			sky = std::make_unique<CModernSky>();
-		}
-	} catch (const content_error& ex) {
-		LOG_L(L_ERROR, "[ISky::%s] error: %s (falling back to NullSky)", __func__, ex.what());
-		sky = std::make_unique<CNullSky>();
-	}
-
-	if (!sky->IsValid()) {
-		LOG_L(L_ERROR, "[ISky::%s] error creating %s (falling back to NullSky)", __func__, sky->GetName().c_str());
-		sky = std::make_unique<CNullSky>();
-	}
+	sky = std::make_unique<CNullSky>();
 }
 
 bool ISky::SunVisible(const float3 pos) const {
