@@ -65,7 +65,6 @@
 #include "Rendering/DebugDrawerAI.h"
 #include "Rendering/IPathDrawer.h"
 #include "Rendering/Features/FeatureDrawer.h"
-#include "Rendering/HUDDrawer.h"
 #include "Rendering/LuaObjectDrawer.h"
 #include "Rendering/Screenshot.h"
 #include "Rendering/ShadowHandler.h"
@@ -2599,22 +2598,6 @@ public:
 
 
 
-class FPSHudActionExecutor : public IUnsyncedActionExecutor {
-public:
-	FPSHudActionExecutor() : IUnsyncedActionExecutor("FPSHud", "Enables/Disables HUD (GUI interface) shown in first-person-control mode") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-
-		bool drawHUD = hudDrawer->GetDraw();
-		InverseOrSetBool(drawHUD, action.GetArgs());
-		hudDrawer->SetDraw(drawHUD);
-		return true;
-	}
-};
-
-
-
 class DebugDrawAIActionExecutor : public IUnsyncedActionExecutor {
 public:
 	DebugDrawAIActionExecutor() : IUnsyncedActionExecutor("DebugDrawAI", "Enables/Disables debug drawing for AIs") {
@@ -3905,7 +3888,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<ToolTipActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ConsoleActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<EndGraphActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<FPSHudActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DebugDrawAIActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<MapMarksActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<AllMapMarksActionExecutor>());

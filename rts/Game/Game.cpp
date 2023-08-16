@@ -40,7 +40,6 @@
 #include "Rendering/LineDrawer.h"
 #include "Rendering/GlobalRendering.h"
 #include "Rendering/DebugDrawerAI.h"
-#include "Rendering/HUDDrawer.h"
 #include "Rendering/IconHandler.h"
 #include "Rendering/ModelsDataUploader.h"
 #include "Rendering/ShadowHandler.h"
@@ -1503,7 +1502,6 @@ bool CGame::Draw() {
 
 		eventHandler.DrawScreenEffects();
 
-		hudDrawer->Draw((gu->GetMyPlayer())->fpsController.GetControllee());
 		debugDrawerAI->Draw();
 
 		DrawInputReceivers();
