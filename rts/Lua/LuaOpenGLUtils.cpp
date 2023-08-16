@@ -515,12 +515,6 @@ GLuint LuaMatTexture::GetTextureID() const
 		} break;
 
 
-		case LUATEX_SHADOWMAP: {
-			texID = shadowHandler.GetShadowTextureID();
-		} break;
-		case LUATEX_SHADOWCOLOR: {
-			texID = shadowHandler.GetColorTextureID();
-		} break;
 		case LUATEX_HEIGHTMAP: {
 			if (heightMapTexture != nullptr)
 				texID = heightMapTexture->GetTextureID();

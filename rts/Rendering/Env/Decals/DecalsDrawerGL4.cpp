@@ -788,7 +788,9 @@ void CDecalsDrawerGL4::Draw()
 	const std::array<GLuint,5> textures = {
 		atlasTex,
 		static_cast<CSMFReadMap*>(readMap)->GetNormalsTexture(),
-		shadowHandler.GetShadowTextureID(),
+		// todo: cleanup shadowTexture removal
+		//shadowHandler.GetShadowTextureID(),
+		atlasTex,
 		infoTextureHandler->GetCurrentInfoTexture(),
 		depthTex
 	};

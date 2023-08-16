@@ -39,7 +39,8 @@ void CModelDrawerHelper::EnableTexturesCommon()
 
 	if (shadowHandler.ShadowsLoaded()) {
 		shadowHandler.SetupShadowTexSampler(GL_TEXTURE2, true);
-		glActiveTexture(GL_TEXTURE3); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
+		// todo: cleanup shadowTextures removal
+		//glActiveTexture(GL_TEXTURE3); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
 	}
 
 	if (CModelDrawerConcept::UseAdvShading()) {

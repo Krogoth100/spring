@@ -879,7 +879,7 @@ void CProjectileDrawer::DrawShadowPassTransparent()
 		return;
 
 	// 2) Bind render target for shadow color filter: R11G11B10 works good
-	shadowHandler.EnableColorOutput(true);
+	//shadowHandler.EnableColorOutput(true);
 
 	// 3) Clear render target to 1,1,1,0 (RGBA) color - done elsewhere
 

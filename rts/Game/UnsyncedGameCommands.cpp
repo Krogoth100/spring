@@ -69,7 +69,6 @@
 #include "Rendering/Screenshot.h"
 #include "Rendering/ShadowHandler.h"
 #include "Rendering/SmoothHeightMeshDrawer.h"
-#include "Rendering/TeamHighlight.h"
 #include "Rendering/Units/UnitDrawer.h"
 #include "Rendering/VerticalSync.h"
 #include "Rendering/Env/IGroundDecalDrawer.h"
@@ -275,20 +274,6 @@ public:
 
 		shadowHandler.Reload(((action.GetArgs()).empty())? nullptr: (action.GetArgs()).c_str());
 		LOG("Set \"shadows\" config-parameter to %i", shadowHandler.shadowConfig);
-		return true;
-	}
-};
-
-class DumpShadowsActionExecutor : public IUnsyncedActionExecutor {
-public:
-	DumpShadowsActionExecutor() : IUnsyncedActionExecutor(
-		"DumpShadows",
-		"Save shadow map textures to files"
-	)
-	{}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		shadowHandler.SaveShadowMapTextures();
 		return true;
 	}
 };
@@ -2349,29 +2334,6 @@ public:
 };
 
 
-class TeamHighlightActionExecutor : public IUnsyncedActionExecutor {
-public:
-	TeamHighlightActionExecutor() : IUnsyncedActionExecutor("TeamHighlight", "Enables/Disables uncontrolled team blinking") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		if (action.GetArgs().empty()) {
-			globalConfig.teamHighlight = abs(globalConfig.teamHighlight + 1) % CTeamHighlight::HIGHLIGHT_SIZE;
-		} else {
-			globalConfig.teamHighlight = abs(StringToInt(action.GetArgs())) % CTeamHighlight::HIGHLIGHT_SIZE;
-		}
-
-		LOG("Team highlighting: %s",
-				((globalConfig.teamHighlight == CTeamHighlight::HIGHLIGHT_PLAYERS) ? "Players only"
-				: ((globalConfig.teamHighlight == CTeamHighlight::HIGHLIGHT_ALL) ? "Players and spectators"
-				: "Disabled")));
-
-		configHandler->Set("TeamHighlight", globalConfig.teamHighlight);
-		return true;
-	}
-};
-
-
 
 class InfoActionExecutor : public IUnsyncedActionExecutor {
 public:
@@ -3704,7 +3666,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<SelectCycleActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DeselectActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ShadowsActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<DumpShadowsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<MapShadowPolyOffsetActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WaterActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<AdvModelShadingActionExecutor>()); // [maint]
@@ -3824,7 +3785,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<CrossActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<FPSActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<SpeedActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<TeamHighlightActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<InfoActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<CmdColorsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<CtrlPanelActionExecutor>());

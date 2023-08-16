@@ -18,22 +18,16 @@ class CCamera;
 class CShadowHandler
 {
 public:
-	CShadowHandler()
-		:smOpaqFBO(true)
-	{}
-
 	void Init();
 	void Kill();
 	void Reload(const char* argv);
 	void Update();
 
-	void SetupShadowTexSampler(unsigned int texUnit, bool enable = false) const;
-	void SetupShadowTexSamplerRaw() const;
-	void ResetShadowTexSampler(unsigned int texUnit, bool disable = false) const;
-	void ResetShadowTexSamplerRaw() const;
-	void CreateShadows();
-
-	void EnableColorOutput(bool enable) const;
+	// todo: remove
+	void SetupShadowTexSampler(unsigned int texUnit, bool enable = false) const {}
+	void SetupShadowTexSamplerRaw() const {}
+	void ResetShadowTexSampler(unsigned int texUnit, bool disable = false) const {}
+	void ResetShadowTexSamplerRaw() const {}
 
 	enum ShadowGenerationBits {
 		SHADOWGEN_BIT_NONE  = 0,
@@ -80,24 +74,16 @@ public:
 
 	const float4& GetShadowParams() const { return shadowTexProjCenter; }
 
-	uint32_t GetShadowTextureID() const { return shadowDepthTexture; }
-	uint32_t GetColorTextureID() const { return shadowColorTexture; }
-
 	static bool ShadowsInitialized() { return firstInit; }
 	static bool ShadowsSupported() { return shadowsSupported; }
 
 	bool ShadowsLoaded() const { return shadowsLoaded; }
 	bool InShadowPass() const { return inShadowPass; }
 
-	void SaveShadowMapTextures() const;
 	void DrawFrustumDebug() const;
 
 	bool& DebugFrustumRef() { return debugFrustum; }
 private:
-	void FreeFBOAndTextures();
-	bool InitFBOAndTextures();
-
-	void DrawShadowPasses();
 	void LoadProjectionMatrix(const CCamera* shadowCam);
 	void LoadShadowGenShaders();
 
@@ -137,11 +123,6 @@ private:
 	// culling and drawing versions of both matrices
 	CMatrix44f projMatrix[2];
 	CMatrix44f viewMatrix[2];
-
-	uint32_t shadowDepthTexture;
-	uint32_t shadowColorTexture;
-
-	FBO smOpaqFBO;
 
 	/// xmid, ymid, p17, p18
 	static constexpr float4 shadowTexProjCenter = {

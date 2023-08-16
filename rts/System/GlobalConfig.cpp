@@ -5,7 +5,6 @@
 #ifndef UNITSYNC
 #include "System/Config/ConfigHandler.h"
 #include "System/Net/UDPConnection.h"
-#include "Rendering/TeamHighlight.h"
 
 CONFIG(int, NetworkLossFactor)
 	.defaultValue(netcode::UDPConnection::MIN_LOSS_FACTOR)
@@ -50,11 +49,6 @@ CONFIG(int, LinkIncomingMaxWaitingPackets)
 	.defaultValue(512)
 	.minimumValue(0);
 
-CONFIG(int, TeamHighlight)
-	.defaultValue(CTeamHighlight::HIGHLIGHT_PLAYERS)
-	.minimumValue(CTeamHighlight::HIGHLIGHT_FIRST)
-	.maximumValue(CTeamHighlight::HIGHLIGHT_LAST);
-
 CONFIG(bool, UseNetMessageSmoothingBuffer).defaultValue(true).description("Buffer network packets for a few frames in an attempt to reduce lag from packet time variance. Introduces a fixed lag.");
 
 CONFIG(bool, LuaWritableConfigFile).defaultValue(true);
@@ -96,8 +90,6 @@ void GlobalConfig::Init()
 
 	minSimDrawBalance = configHandler->GetFloat("MinSimDrawBalance");
 	minDrawFPS = configHandler->GetInt("MinDrawFPS");
-
-	teamHighlight = configHandler->GetInt("TeamHighlight");
 }
 #endif
 

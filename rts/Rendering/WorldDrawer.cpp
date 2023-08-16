@@ -235,15 +235,6 @@ void CWorldDrawer::Update(bool newSimFrame)
 
 void CWorldDrawer::GenerateIBLTextures() const
 {
-
-	if (shadowHandler.ShadowsLoaded()) {
-		SCOPED_TIMER("Draw::World::CreateShadows");
-
-		game->SetDrawMode(CGame::gameShadowDraw);
-		shadowHandler.CreateShadows();
-		game->SetDrawMode(CGame::gameNormalDraw);
-	}
-
 	if (ISky::GetSky()->GetLight()->Update()) {
 		{
 			SCOPED_TIMER("Draw::World::UpdateSkyTex");
@@ -281,8 +272,7 @@ void CWorldDrawer::Draw() const
 {
 	SCOPED_TIMER("Draw::World");
 
-	const auto& sky = ISky::GetSky();
-	glClearColor(sky->fogColor.x, sky->fogColor.y, sky->fogColor.z, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glDepthMask(GL_TRUE);
@@ -293,10 +283,7 @@ void CWorldDrawer::Draw() const
 	camera->Update();
 
 	DrawOpaqueObjects();
-	ISky::GetSky()->Draw();
 	DrawAlphaObjects();
-
-	ISky::GetSky()->DrawSun();
 
 	{
 		SCOPED_TIMER("Draw::World::DrawWorld");
@@ -305,8 +292,6 @@ void CWorldDrawer::Draw() const
 
 	DrawMiscObjects();
 	DrawBelowWaterOverlay();
-
-	glDisable(GL_FOG);
 }
 
 
