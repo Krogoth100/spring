@@ -18,7 +18,6 @@
 #include "Rendering/UnitDefImage.h"
 #include "Rendering/Units/UnitDrawer.h"
 #include "Rendering/GL/GeometryBuffer.h"
-#include "Rendering/Env/CubeMapHandler.h"
 #include "Rendering/Map/InfoTexture/IInfoTextureHandler.h"
 #include "Rendering/Map/InfoTexture/InfoTexture.h"
 #include "Rendering/Textures/NamedTextures.h"
@@ -516,18 +515,6 @@ GLuint LuaMatTexture::GetTextureID() const
 		} break;
 
 
-		// cubemap textures
-		case LUATEX_MAP_REFLECTION: {
-			texID = cubeMapHandler.GetEnvReflectionTextureID();
-		} break;
-		case LUATEX_SKY_REFLECTION: {
-			texID = cubeMapHandler.GetSkyReflectionTextureID();
-		} break;
-		case LUATEX_SPECULAR: {
-			texID = cubeMapHandler.GetSpecularTextureID();
-		} break;
-
-
 		case LUATEX_SHADOWMAP: {
 			texID = shadowHandler.GetShadowTextureID();
 		} break;
@@ -854,18 +841,6 @@ std::tuple<int, int, int> LuaMatTexture::GetSize() const
 			const UnitDef* ud = reinterpret_cast<const UnitDef*>(data);
 			const icon::CIcon& it = ud->iconType;
 			return ReturnHelper(it->GetSizeX(), it->GetSizeY());
-		} break;
-
-
-		case LUATEX_MAP_REFLECTION: {
-			return ReturnHelper(cubeMapHandler.GetReflectionTextureSize());
-		} break;
-		case LUATEX_SKY_REFLECTION: {
-			// note: same size as regular refltex
-			return ReturnHelper(cubeMapHandler.GetReflectionTextureSize());
-		} break;
-		case LUATEX_SPECULAR: {
-			return ReturnHelper(cubeMapHandler.GetSpecularTextureSize());
 		} break;
 
 

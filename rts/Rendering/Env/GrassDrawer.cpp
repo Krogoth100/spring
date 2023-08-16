@@ -12,7 +12,6 @@
 #include "Rendering/ShadowHandler.h"
 #include "Rendering/Env/ISky.h"
 #include "Rendering/Env/SunLighting.h"
-#include "Rendering/Env/CubeMapHandler.h"
 #include "Rendering/GL/myGL.h"
 #include "Rendering/GL/FBO.h"
 #include "Rendering/Map/InfoTexture/IInfoTextureHandler.h"
@@ -639,8 +638,9 @@ void CGrassDrawer::SetupGlStateNear()
 			glBindTexture(GL_TEXTURE_2D, readMap->GetShadingTexture());
 		glActiveTextureARB(GL_TEXTURE3_ARB);
 			glBindTexture(GL_TEXTURE_2D, infoTextureHandler->GetCurrentInfoTexture());
-		glActiveTextureARB(GL_TEXTURE5_ARB);
-			glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubeMapHandler.GetSpecularTextureID());
+		// todo: cleanup cubemap removal
+		//glActiveTextureARB(GL_TEXTURE5_ARB);
+			//glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubeMapHandler.GetSpecularTextureID());
 	}
 
 	// bind shader

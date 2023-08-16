@@ -6,7 +6,6 @@
 #include "Sim/Units/UnitDefHandler.h"
 #include "Sim/Features/FeatureDefHandler.h"
 #include "Sim/Weapons/WeaponDefHandler.h"
-#include "Rendering/Env/CubeMapHandler.h"
 #include "Rendering/Env/GrassDrawer.h"
 #include "Rendering/Env/IGroundDecalDrawer.h"
 #include "Rendering/Env/ISky.h"
@@ -179,7 +178,7 @@ void CWorldDrawer::Kill()
 	spring::SafeDelete(inMapDrawerView);
 
 	CFeatureDrawer::KillStatic(gu->globalReload);
-	CUnitDrawer::KillStatic(gu->globalReload); // depends on unitHandler, cubeMapHandler
+	CUnitDrawer::KillStatic(gu->globalReload); // depends on unitHandler
 	CProjectileDrawer::KillStatic(gu->globalReload);
 
 	S3DModelVAO::Kill();
@@ -245,16 +244,7 @@ void CWorldDrawer::GenerateIBLTextures() const
 		game->SetDrawMode(CGame::gameNormalDraw);
 	}
 
-	{
-		SCOPED_TIMER("Draw::World::UpdateReflTex");
-		cubeMapHandler.UpdateReflectionTexture();
-	}
-
 	if (ISky::GetSky()->GetLight()->Update()) {
-		{
-			SCOPED_TIMER("Draw::World::UpdateSpecTex");
-			cubeMapHandler.UpdateSpecularTexture();
-		}
 		{
 			SCOPED_TIMER("Draw::World::UpdateSkyTex");
 			ISky::GetSky()->UpdateSkyTexture();

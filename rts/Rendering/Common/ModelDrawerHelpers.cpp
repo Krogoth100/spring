@@ -7,7 +7,6 @@
 #include "Sim/Misc/Team.h"
 #include "Sim/Objects/SolidObject.h"
 #include "Rendering/ShadowHandler.h"
-#include "Rendering/Env/CubeMapHandler.h"
 
 bool CModelDrawerHelper::ObjectVisibleReflection(const float3& objPos, const float3& camPos, float maxRadius)
 {
@@ -44,13 +43,14 @@ void CModelDrawerHelper::EnableTexturesCommon()
 	}
 
 	if (CModelDrawerConcept::UseAdvShading()) {
-		glActiveTexture(GL_TEXTURE4);
+		// todo: cleanup cubemap removal
+		/*glActiveTexture(GL_TEXTURE4);
 		glEnable(GL_TEXTURE_CUBE_MAP);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapHandler.GetEnvReflectionTextureID());
 
 		glActiveTexture(GL_TEXTURE5);
 		glEnable(GL_TEXTURE_CUBE_MAP);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapHandler.GetSpecularTextureID());
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapHandler.GetSpecularTextureID());*/
 	}
 
 	glActiveTexture(GL_TEXTURE0);

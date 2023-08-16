@@ -7,7 +7,6 @@
 #include "Game/TraceRay.h"
 #include "Map/MapInfo.h"
 #include "Rendering/GlobalRendering.h"
-#include "Rendering/Env/DebugCubeMapTexture.h"
 #include "Rendering/GL/myGL.h"
 #include "System/Config/ConfigHandler.h"
 #include "System/Exceptions.h"
