@@ -248,36 +248,6 @@ public:
 
 
 
-class MapBorderActionExecutor : public IUnsyncedActionExecutor {
-public:
-	MapBorderActionExecutor() : IUnsyncedActionExecutor("MapBorder", "Control map-border rendering", false, {
-			{"", "Toggles map-border rendering"},
-			{"<on|off>", "Set map-border rendering <on|off>"},
-			}) {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		CSMFGroundDrawer* smfGD = dynamic_cast<CSMFGroundDrawer*>(readMap->GetGroundDrawer());
-
-		if (smfGD == nullptr)
-			return false;
-
-		if (!action.GetArgs().empty()) {
-			bool enable = true;
-			InverseOrSetBool(enable, action.GetArgs());
-
-			if (enable != smfGD->ToggleMapBorder())
-				smfGD->ToggleMapBorder();
-
-		} else {
-			smfGD->ToggleMapBorder();
-		}
-
-		return true;
-	}
-};
-
-
 class ShadowsActionExecutor : public IUnsyncedActionExecutor {
 public:
 	ShadowsActionExecutor() : IUnsyncedActionExecutor(
@@ -1810,27 +1780,6 @@ public:
 		readMap->GetGroundDrawer()->DecreaseDetail();
 		return true;
 	}
-};
-
-
-
-class GroundDetailActionExecutor : public IUnsyncedActionExecutor {
-public:
-	GroundDetailActionExecutor() : IUnsyncedActionExecutor("GroundDetail",
-			"Set the level of ground detail") {}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		int detail;
-		if (action.GetArgs().empty()) {
-			LOG_L(L_WARNING, "/%s: missing argument", GetCommand().c_str());
-			return false;
-		}
-		detail = StringToInt((action.GetArgs()).c_str());
-
-		readMap->GetGroundDrawer()->SetDetail(detail);
-		return true;
-	}
-
 };
 
 
@@ -3757,7 +3706,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<ShadowsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DumpShadowsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<MapShadowPolyOffsetActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<MapBorderActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WaterActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<AdvModelShadingActionExecutor>()); // [maint]
 	AddActionExecutor(AllocActionExecutor<AdvMapShadingActionExecutor>()); // [maint]
@@ -3845,7 +3793,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	// [devel] AddActionExecutor(AllocActionExecutor<GammaExponentActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<IncreaseViewRadiusActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DecreaseViewRadiusActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<GroundDetailActionExecutor>());
 	// [devel] AddActionExecutor(AllocActionExecutor<MoreGrassActionExecutor>());
 	// [devel] AddActionExecutor(AllocActionExecutor<LessGrassActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<FeatureFadeDistActionExecutor>());

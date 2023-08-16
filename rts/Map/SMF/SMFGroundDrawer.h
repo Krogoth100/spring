@@ -14,19 +14,11 @@
 
 
 class CSMFReadMap;
-class IMeshDrawer;
 struct ISMFRenderState;
 
 namespace Shader {
 	struct IProgramObject;
 }
-
-enum {
-	SMF_MESHDRAWER_LEGACY = 0,
-	SMF_MESHDRAWER_BASIC  = 1,
-	SMF_MESHDRAWER_ROAM   = 2,
-	SMF_MESHDRAWER_LAST   = 3,
-};
 
 
 /**
@@ -59,8 +51,8 @@ public:
 	void SetupBigSquare(const DrawPass::e& drawPass, int bigSquareX, int bigSquareY);
 
 
-	void IncreaseDetail() { SetDetail(groundDetail + 1); }
-	void DecreaseDetail() { SetDetail(groundDetail - 1); }
+	void IncreaseDetail() { SetDetail(0); }
+	void DecreaseDetail() { SetDetail(0); }
 	void SetDetail(int newGroundDetail);
 	int GetGroundDetail(const DrawPass::e& drawPass = DrawPass::Normal) const;
 
@@ -70,13 +62,8 @@ public:
 	const GL::GeometryBuffer* GetGeometryBuffer() const { return &geomBuffer; }
 	      GL::GeometryBuffer* GetGeometryBuffer()       { return &geomBuffer; }
 
-	IMeshDrawer* GetMeshDrawer() { return meshDrawer; }
-	IMeshDrawer* SwitchMeshDrawer(int wantedMode = -1);
-
 private:
 	ISMFRenderState* SelectRenderState(const DrawPass::e& drawPass);
-
-	inline void DrawBorder(const DrawPass::e drawPass);
 
 	bool HaveLuaRenderState() const;
 	bool UpdateGeometryBuffer(bool init);
@@ -84,10 +71,6 @@ private:
 	bool alwaysDispatchEvents = false;
 protected:
 	CSMFReadMap* smfMap;
-	IMeshDrawer* meshDrawer;
-
-	int drawerMode;
-	int groundDetail;
 
 	// [0] := fallback shader-less rendering path
 	// [1] := default shader-driven rendering path

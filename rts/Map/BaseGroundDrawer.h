@@ -41,8 +41,6 @@ public:
 	virtual void SetDrawForwardPass(bool b) { drawForward = b; }
 	virtual void SetDrawDeferredPass(bool) {}
 
-	virtual bool ToggleMapBorder() { drawMapEdges = !drawMapEdges; return drawMapEdges; }
-
 	virtual const GL::LightHandler* GetLightHandler() const { return nullptr; }
 	virtual       GL::LightHandler* GetLightHandler()       { return nullptr; }
 	virtual const GL::GeometryBuffer* GetGeometryBuffer() const { return nullptr; }
@@ -76,7 +74,6 @@ public:
 protected:
 	bool drawForward;
 	bool drawDeferred;
-	bool drawMapEdges;
 	bool postDeferredEvents;
 	bool deferredEvents;
 

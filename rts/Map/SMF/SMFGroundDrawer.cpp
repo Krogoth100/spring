@@ -7,7 +7,6 @@
 #include "Map/MapInfo.h"
 #include "Map/HeightMapTexture.h"
 #include "Map/ReadMap.h"
-#include "Map/SMF/Basic/BasicMeshDrawer.h"
 #include "Rendering/GlobalRendering.h"
 #include "Rendering/ShadowHandler.h"
 #include "Rendering/Env/ISky.h"
@@ -22,16 +21,6 @@
 #include "System/SafeUtil.h"
 #include "System/Log/ILog.h"
 #include "System/SpringMath.h"
-
-CONFIG(int, GroundDetail)
-	.defaultValue(60)
-	.headlessValue(0)
-	.minimumValue(0)
-	// todo: ROAM cleanup
-	.maximumValue(0)
-	.description("Controls how detailed the map geometry will be. On lowered settings, cliffs may appear to be jagged or \"melting\".");
-CONFIG(bool, MapBorder).defaultValue(true).description("Draws a solid border at the edges of the map.");
-
 
 CONFIG(int, MaxDynamicMapLights)
 	.defaultValue(1)
@@ -53,14 +42,9 @@ namespace Shader {
 
 CSMFGroundDrawer::CSMFGroundDrawer(CSMFReadMap* rm)
 	: smfMap(rm)
-	, meshDrawer(nullptr)
 	, geomBuffer{"GROUNDDRAWER-GBUFFER"}
 {
 	alwaysDispatchEvents = configHandler->GetBool("AlwaysSendDrawGroundEvents");
-	drawerMode = SMF_MESHDRAWER_BASIC;
-	groundDetail = configHandler->GetInt("GroundDetail");
-
-	meshDrawer = SwitchMeshDrawer(drawerMode);
 
 	smfRenderStates = { nullptr };
 	smfRenderStates[RENDER_STATE_SSP] = ISMFRenderState::GetInstance(false, false);
@@ -88,7 +72,6 @@ CSMFGroundDrawer::CSMFGroundDrawer(CSMFReadMap* rm)
 
 	drawForward = true;
 	drawDeferred = geomBuffer.Valid();
-	drawMapEdges = configHandler->GetBool("MapBorder");
 	postDeferredEvents = configHandler->GetBool("AllowDrawMapPostDeferredEvents");
 	deferredEvents = configHandler->GetBool("AllowDrawMapDeferredEvents");
 
@@ -117,38 +100,9 @@ CSMFGroundDrawer::~CSMFGroundDrawer()
 	smfRenderStates = { nullptr };
 
 	shaderHandler->ReleaseProgramObject("[SMFGroundDrawer]", "Border");
-
-	spring::SafeDelete(meshDrawer);
 }
 
 
-
-IMeshDrawer* CSMFGroundDrawer::SwitchMeshDrawer(int wantedMode)
-{
-	// toggle
-	if (wantedMode <= -1) {
-		wantedMode = drawerMode + 1;
-		wantedMode %= SMF_MESHDRAWER_LAST;
-	}
-
-	if ((wantedMode == drawerMode) && (meshDrawer != nullptr))
-		return meshDrawer;
-
-	spring::SafeDelete(meshDrawer);
-
-	switch ((drawerMode = wantedMode)) {
-		case SMF_MESHDRAWER_LEGACY: {
-			LOG("Legacy Mesh Renderer is no longer available");
-		} [[fallthrough]];
-		case SMF_MESHDRAWER_BASIC:
-		default: {
-			LOG("Switching to Basic Mesh Rendering");
-			meshDrawer = new CBasicMeshDrawer(this);
-		} break;
-	}
-
-	return meshDrawer;
-}
 
 ISMFRenderState* CSMFGroundDrawer::SelectRenderState(const DrawPass::e& drawPass)
 {
@@ -220,8 +174,6 @@ void CSMFGroundDrawer::DrawDeferredPass(const DrawPass::e& drawPass, bool alphaT
 		if (alwaysDispatchEvents || HaveLuaRenderState())
 			eventHandler.DrawGroundPreDeferred();
 
-		meshDrawer->DrawMesh(drawPass);
-
 		if (alphaTest) {
 			glDisable(GL_ALPHA_TEST);
 		}
@@ -268,8 +220,6 @@ void CSMFGroundDrawer::DrawForwardPass(const DrawPass::e& drawPass, bool alphaTe
 	if (alwaysDispatchEvents || HaveLuaRenderState())
 		eventHandler.DrawGroundPreForward();
 
-	meshDrawer->DrawMesh(drawPass);
-
 	glPopAttrib();
 
 	smfRenderStates[RENDER_STATE_SEL]->Disable(this, drawPass);
@@ -304,90 +254,12 @@ void CSMFGroundDrawer::Draw(const DrawPass::e& drawPass)
 	}
 
 	glDisable(GL_CULL_FACE);
-
-	if (drawPass == DrawPass::Normal && drawMapEdges) {
-		DrawBorder(drawPass);
-	}
 }
 
 
-void CSMFGroundDrawer::DrawBorder(const DrawPass::e drawPass)
-{
-	ISMFRenderState* prvState = smfRenderStates[RENDER_STATE_SEL];
-
-	// no need to enable, does nothing
-	smfRenderStates[RENDER_STATE_SEL] = smfRenderStates[RENDER_STATE_NOP];
-
-	glEnable(GL_BLEND);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	glActiveTexture(GL_TEXTURE2); glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, smfMap->GetDetailTexture());
-
-	glActiveTexture(GL_TEXTURE1); glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, heightMapTexture->GetTextureID());
-
-	//for CSMFGroundTextures::BindSquareTexture()
-	glActiveTexture(GL_TEXTURE0); glEnable(GL_TEXTURE_2D);
-
-	glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
-
-	borderShader->Enable();
-	borderShader->SetUniform("borderMinHeight", std::min(readMap->GetInitMinHeight(), -500.0f));
-	meshDrawer->DrawBorderMesh(drawPass);
-	borderShader->Disable();
-
-	if (wireframe)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
-
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-
-	smfRenderStates[RENDER_STATE_SEL] = prvState;
-}
-
-
+// todo: remove
 void CSMFGroundDrawer::DrawShadowPass()
 {
-	if (!globalRendering->drawGround)
-		return;
-	if (readMap->HasOnlyVoidWater())
-		return;
-
-	shadowShader = shadowHandler.GetShadowGenProg(CShadowHandler::SHADOWGEN_PROGRAM_MAP);
-	assert(shadowShader);
-	glEnable(GL_POLYGON_OFFSET_FILL);
-
-	//#pragma message "REMOVE ME, WHEN NOT NEEDED"
-	//glDisable(GL_CULL_FACE);
-
-	glPolygonOffset(spPolygonOffsetScale, spPolygonOffsetUnits); // dz*s + r*u
-
-	glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, heightMapTexture->GetTextureID());
-	shadowShader->Enable();
-	shadowShader->SetUniform("borderMinHeight", std::min(readMap->GetInitMinHeight(), -500.0f));
-		meshDrawer->DrawMesh(DrawPass::Shadow);
-		// also render the border geometry to prevent light-visible backfaces
-		meshDrawer->DrawBorderMesh(DrawPass::Shadow);
-	shadowShader->Disable();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glActiveTexture(GL_TEXTURE0);
-
-	glDisable(GL_POLYGON_OFFSET_FILL);
-	//glEnable(GL_CULL_FACE);
 }
 
 
@@ -419,9 +291,6 @@ void CSMFGroundDrawer::Update()
 {
 	if (readMap->HasOnlyVoidWater())
 		return;
-
-	// done by DrawMesh; needs to know the actual draw-pass
-	// meshDrawer->Update();
 
 	if (drawDeferred) {
 		drawDeferred &= UpdateGeometryBuffer(false);
@@ -456,39 +325,11 @@ bool CSMFGroundDrawer::UpdateGeometryBuffer(bool init)
 
 void CSMFGroundDrawer::SetDetail(int newGroundDetail)
 {
-	const int minGroundDetail = 0;
-	const int maxGroundDetail = CBasicMeshDrawer::LOD_LEVELS - 1;
-
-	configHandler->Set("GroundDetail", groundDetail = Clamp(newGroundDetail, minGroundDetail, maxGroundDetail));
-	LOG("GroundDetail%s set to %i", "[Bias]", groundDetail);
 }
 
 
 
 int CSMFGroundDrawer::GetGroundDetail(const DrawPass::e& drawPass) const
 {
-	int detail = groundDetail;
-
-	switch (drawPass) {
-		case DrawPass::TerrainReflection:
-			detail *= LODScaleTerrainReflection;
-			break;
-		case DrawPass::WaterReflection:
-			detail *= LODScaleReflection;
-			break;
-		case DrawPass::WaterRefraction:
-			detail *= LODScaleRefraction;
-			break;
-		case DrawPass::Shadow:
-			// TODO:
-			//   render a contour mesh for the SP? z-fighting / p-panning occur
-			//   when the regular and shadow-mesh tessellations differ too much,
-			//   more visible on larger or hillier maps
-			//   detail *= LODScaleShadow;
-			break;
-		default:
-			break;
-	}
-
-	return detail;
+	return 0;
 }

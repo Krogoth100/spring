@@ -18,7 +18,6 @@ CBaseGroundDrawer::CBaseGroundDrawer()
 
 	drawForward = true;
 	drawDeferred = false;
-	drawMapEdges = false;
 
 	wireframe = false;
 
