@@ -50,7 +50,7 @@ public:
 		return losmap[p.y * size.x + p.x];
 	}
 
-	// FIXME temp fix for CBaseGroundDrawer and AI interface, which need raw data
+	// FIXME temp fix for AI interface, which needs raw data
 	const unsigned short& front() const { return (losmap.front()); }
 
 private:

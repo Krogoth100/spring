@@ -350,29 +350,6 @@ public:
 
 
 
-class AdvMapShadingActionExecutor : public IUnsyncedActionExecutor {
-public:
-	AdvMapShadingActionExecutor() : IUnsyncedActionExecutor("AdvMapShading",
-			"Control advanced map shading mode",
-			false, {
-			{"", "Toggles advanced map shading mode"},
-			{"<on|off>", "Set advanced map shading mode <on|off>"},
-			}) {}
-
-	bool Execute(const UnsyncedAction& action) const {
-
-		CBaseGroundDrawer* gd = readMap->GetGroundDrawer();
-		static bool canUseShaders = gd->UseAdvShading();
-
-		if (!canUseShaders)
-			return false;
-
-		InverseOrSetBool(gd->UseAdvShadingRef(), action.GetArgs());
-		LogSystemStatus("map shaders", gd->UseAdvShading());
-		return true;
-	}
-};
-
 class UnitDrawerTypeActionExecutor : public IUnsyncedActionExecutor {
 public:
 	UnitDrawerTypeActionExecutor() : IUnsyncedActionExecutor("UnitDrawer",
@@ -3087,19 +3064,6 @@ public:
 	}
 };
 
-class WireMapActionExecutor: public IUnsyncedActionExecutor {
-public:
-	WireMapActionExecutor(): IUnsyncedActionExecutor("WireMap", "Toggle wireframe-mode drawing of map geometry") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		CBaseGroundDrawer* gd = readMap->GetGroundDrawer();
-
-		LogSystemStatus("wireframe map-drawing mode", gd->WireFrameModeRef() = !gd->WireFrameModeRef());
-		return true;
-	}
-};
-
 class WireSkyActionExecutor: public IUnsyncedActionExecutor {
 public:
 	WireSkyActionExecutor(): IUnsyncedActionExecutor("WireSky", "Toggle wireframe-mode drawing of skydome geometry") {
@@ -3669,7 +3633,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<MapShadowPolyOffsetActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WaterActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<AdvModelShadingActionExecutor>()); // [maint]
-	AddActionExecutor(AllocActionExecutor<AdvMapShadingActionExecutor>()); // [maint]
 	AddActionExecutor(AllocActionExecutor<UnitDrawerTypeActionExecutor>()); // [maint]
 	AddActionExecutor(AllocActionExecutor<FeatureDrawerTypeActionExecutor>()); // [maint]
 	AddActionExecutor(AllocActionExecutor<SayActionExecutor>());
@@ -3827,7 +3790,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<LODScaleActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<AirMeshActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WireModelActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<WireMapActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WireSkyActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WireWaterActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<CrashActionExecutor>());

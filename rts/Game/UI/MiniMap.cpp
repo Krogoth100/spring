@@ -21,7 +21,6 @@
 #include "Game/TraceRay.h"
 #include "Sim/Misc/TeamHandler.h"
 #include "Lua/LuaUnsyncedCtrl.h"
-#include "Map/BaseGroundDrawer.h"
 #include "Map/Ground.h"
 #include "Map/ReadMap.h"
 #include "Rendering/CommandDrawer.h"

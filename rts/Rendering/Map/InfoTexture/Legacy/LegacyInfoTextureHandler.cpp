@@ -4,7 +4,6 @@
 #include "Game/GlobalUnsynced.h"
 #include "Game/SelectedUnitsHandler.h"
 #include "Game/UI/GuiHandler.h"
-#include "Map/BaseGroundDrawer.h"
 #include "Map/Ground.h"
 #include "Map/HeightLinePalette.h"
 #include "Map/MapInfo.h"
@@ -264,8 +263,6 @@ bool CLegacyInfoTextureHandler::UpdateExtraTexture(BaseGroundDrawMode texDrawMod
 	if (updateTextureState < extraTextureUpdateRate) {
 		const int pwr2mapx_half = mapDims.pwr2mapx >> 1;
 
-		CBaseGroundDrawer* gd = readMap->GetGroundDrawer();
-
 		int starty;
 		int endy;
 		int offset;
@@ -385,12 +382,23 @@ bool CLegacyInfoTextureHandler::UpdateExtraTexture(BaseGroundDrawMode texDrawMod
 
 						const int a = ((y * pwr2mapx) + x) * 4 - offset;
 
+						// todo: -BaseGroundDrawer cleanup
 						for (int c = 0; c < 3; c++) {
-							int val = gd->alwaysColor[c] * 255;
+							/*int val = gd->alwaysColor[c] * 255;
 							val += (gd->jamColor[c]   * inJam); //FIXME
 							val += (gd->losColor[c]   * totalLos);
 							val += (gd->radarColor[c] * inRadar);
-							infoTexMem[a + (2 - c)] = (val / gd->losColorScale);
+							infoTexMem[a + (2 - c)] = (val / gd->losColorScale);*/
+							constexpr int losColorScale = 10000;
+							constexpr int alwaysColor[3] = {int(losColorScale*0.2),int(losColorScale*0.2),int(losColorScale*0.2)};
+							constexpr int jamColor[3] = {int(losColorScale*0.1),int(losColorScale*0),int(losColorScale*0)};
+							constexpr int losColor[3] = {int(losColorScale*0.3),int(losColorScale*0.3),int(losColorScale*0.3)};
+							constexpr int radarColor[3] = {int(losColorScale*0),int(losColorScale*0),int(losColorScale*1)};
+							int val = alwaysColor[c] * 255;
+							val += (jamColor[c]   * inJam); //FIXME
+							val += (losColor[c]   * totalLos);
+							val += (radarColor[c] * inRadar);
+							infoTexMem[a + (2 - c)] = (val / losColorScale);
 						}
 
 						infoTexMem[a + COLOR_A] = 255;

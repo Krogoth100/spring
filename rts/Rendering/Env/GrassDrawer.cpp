@@ -700,8 +700,6 @@ void CGrassDrawer::SetupGlStateNear()
 
 void CGrassDrawer::ResetGlStateNear()
 {
-	//CBaseGroundDrawer* gd = readMap->GetGroundDrawer();
-
 	if (globalRendering->haveGLSL) {
 		grassShader->Disable();
 

@@ -31,7 +31,6 @@
 #include "Rendering/Shaders/ShaderHandler.h"
 #include "Rendering/Textures/ColorMap.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
-#include "Map/BaseGroundDrawer.h"
 #include "Map/HeightMapTexture.h"
 #include "Map/ReadMap.h"
 #include "Game/Camera.h"
@@ -205,9 +204,6 @@ void CWorldDrawer::Update(bool newSimFrame)
 	LuaObjectDrawer::Update(numUpdates == 0);
 	readMap->UpdateDraw(numUpdates == 0);
 
-	if (globalRendering->drawGround)
-		(readMap->GetGroundDrawer())->Update();
-
 	// XXX: done in CGame, needs to get updated even when !doDrawWorld
 	// (it updates unitdrawpos which is used for maximized minimap too)
 	// unitDrawer->Update();
@@ -235,17 +231,6 @@ void CWorldDrawer::Update(bool newSimFrame)
 
 void CWorldDrawer::GenerateIBLTextures() const
 {
-	if (ISky::GetSky()->GetLight()->Update()) {
-		{
-			SCOPED_TIMER("Draw::World::UpdateSkyTex");
-			ISky::GetSky()->UpdateSkyTexture();
-		}
-	}
-	{
-		SCOPED_TIMER("Draw::World::UpdateShadingTex");
-		readMap->UpdateShadingTexture();
-	}
-
 	if (FBO::IsSupported())
 		FBO::Unbind();
 
@@ -297,13 +282,7 @@ void CWorldDrawer::Draw() const
 
 void CWorldDrawer::DrawOpaqueObjects() const
 {
-	CBaseGroundDrawer* gd = readMap->GetGroundDrawer();
-
 	if (globalRendering->drawGround) {
-		{
-			SCOPED_TIMER("Draw::World::Terrain");
-			gd->Draw(DrawPass::Normal);
-		}
 		{
 			eventHandler.DrawPreDecals();
 			SCOPED_TIMER("Draw::World::Decals");
@@ -319,11 +298,6 @@ void CWorldDrawer::DrawOpaqueObjects() const
 	selectedUnitsHandler.Draw();
 	eventHandler.DrawWorldPreUnit();
 
-	{
-		SCOPED_TIMER("Draw::World::Models::Opaque");
-		unitDrawer->Draw(false);
-		featureDrawer->Draw(false);
-	}
 	{
 		SCOPED_TIMER("Draw::OpaqueObjects::Debug");
 		DebugColVolDrawer::Draw();
@@ -341,22 +315,6 @@ void CWorldDrawer::DrawAlphaObjects() const
 	static const double belowPlaneEq[4] = {0.0f, -1.0f, 0.0f, 0.0f};
 	static const double abovePlaneEq[4] = {0.0f,  1.0f, 0.0f, 0.0f};
 
-	{
-		SCOPED_TIMER("Draw::World::Models::Alpha");
-		// clip in model-space
-		glPushMatrix();
-		glLoadIdentity();
-		glClipPlane(GL_CLIP_PLANE3, belowPlaneEq);
-		glPopMatrix();
-		glEnable(GL_CLIP_PLANE3);
-
-		// draw alpha-objects below water surface (farthest)
-		unitDrawer->DrawAlphaPass(false);
-		featureDrawer->DrawAlphaPass(false);
-
-		glDisable(GL_CLIP_PLANE3);
-	}
-
 	// draw water (in-between)
 	if (globalRendering->drawWater && !mapRendering->voidWater) {
 		SCOPED_TIMER("Draw::World::Water");
@@ -365,21 +323,6 @@ void CWorldDrawer::DrawAlphaObjects() const
 		water->UpdateWater(game);
 		water->Draw();
 		eventHandler.DrawWaterPost();
-	}
-
-	{
-		SCOPED_TIMER("Draw::World::Models::Alpha");
-		glPushMatrix();
-		glLoadIdentity();
-		glClipPlane(GL_CLIP_PLANE3, abovePlaneEq);
-		glPopMatrix();
-		glEnable(GL_CLIP_PLANE3);
-
-		// draw alpha-objects above water surface (closest)
-		unitDrawer->DrawAlphaPass(false);
-		featureDrawer->DrawAlphaPass(false);
-
-		glDisable(GL_CLIP_PLANE3);
 	}
 }
 
@@ -394,12 +337,6 @@ void CWorldDrawer::DrawMiscObjects() const
 			selectedUnitsHandler.DrawCommands();
 		}
 	}
-
-	// either draw from here, or make {Dyn,Bump}Water use blending
-	// pro: icons are drawn only once per frame, not every pass
-	// con: looks somewhat worse for underwater / obscured icons
-	if (!CUnitDrawer::UseScreenIcons())
-		unitDrawer->DrawUnitIcons();
 
 	lineDrawer.DrawAll();
 	cursorIcons.Draw();
