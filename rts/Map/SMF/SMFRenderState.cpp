@@ -229,12 +229,6 @@ void SMFRenderStateGLSL::Enable(const CSMFGroundDrawer* smfGroundDrawer, const D
 	glLoadIdentity();
 	glMultMatrixf(camera->GetViewMatrix());
 
-	if (isAdv && shadowHandler.ShadowsLoaded()) {
-		shadowHandler.SetupShadowTexSampler(GL_TEXTURE4);
-		// todo: cleanup shadowTextures removal
-		//glActiveTexture(GL_TEXTURE19); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
-	}
-
 	glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, heightMapTexture->GetTextureID());
 	glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, smfMap->GetDetailTexture());
 	glActiveTexture(GL_TEXTURE14); glBindTexture(GL_TEXTURE_2D, infoTextureHandler->GetCurrentInfoTexture());

@@ -849,20 +849,7 @@ void CProjectileDrawer::Draw(bool drawReflection, bool drawRefraction) {
 
 void CProjectileDrawer::DrawShadowPassOpaque()
 {
-	Shader::IProgramObject* po = shadowHandler.GetShadowGenProg(CShadowHandler::SHADOWGEN_PROGRAM_PROJECTILE);
-
-	glPushAttrib(GL_ENABLE_BIT);
-	glDisable(GL_TEXTURE_2D);
-	po->Enable();
-	{
-		for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
-			DrawProjectilesShadow(modelType);
-		}
-	}
-	po->Disable();
-
-	//glShadeModel(GL_FLAT);
-	glPopAttrib();
+	// todo: -shadow render cleanup
 }
 
 void CProjectileDrawer::DrawShadowPassTransparent()

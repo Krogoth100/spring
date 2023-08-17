@@ -729,27 +729,12 @@ void LuaOpenGL::ResetDrawWorldPreUnit()
 
 void LuaOpenGL::EnableDrawWorldShadow()
 {
-	EnableCommon(DRAW_WORLD_SHADOW);
-	resetMatrixFunc = ResetWorldShadowMatrices;
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	glPolygonOffset(1.0f, 1.0f);
-
-	glEnable(GL_POLYGON_OFFSET_FILL);
-
-	// FIXME: map/proj/tree passes
-	Shader::IProgramObject* po = shadowHandler.GetShadowGenProg(CShadowHandler::SHADOWGEN_PROGRAM_MODEL);
-	po->Enable();
+	// todo: -shadow render cleanup
 }
 
 void LuaOpenGL::DisableDrawWorldShadow()
 {
-	glDisable(GL_POLYGON_OFFSET_FILL);
-
-	Shader::IProgramObject* po = shadowHandler.GetShadowGenProg(CShadowHandler::SHADOWGEN_PROGRAM_MODEL);
-	po->Disable();
-
-	ResetWorldShadowMatrices();
-	DisableCommon(DRAW_WORLD_SHADOW);
+	// todo: -shadow render cleanup
 }
 
 void LuaOpenGL::ResetDrawWorldShadow()

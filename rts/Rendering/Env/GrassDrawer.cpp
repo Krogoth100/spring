@@ -647,12 +647,6 @@ void CGrassDrawer::SetupGlStateNear()
 	if (globalRendering->haveGLSL) {
 		EnableShader(GRASS_PROGRAM_NEAR);
 
-		if (shadowHandler.ShadowsLoaded()) {
-			shadowHandler.SetupShadowTexSampler(GL_TEXTURE4);
-			// todo: cleanup shadowTextures removal
-			//glActiveTexture(GL_TEXTURE6); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
-		}
-
 		glMatrixMode(GL_PROJECTION);
 			glPushMatrix();
 			glMultMatrixf(camera->GetViewMatrix());
@@ -768,12 +762,6 @@ void CGrassDrawer::SetupGlStateFar()
 		glBindTexture(GL_TEXTURE_2D, readMap->GetShadingTexture());
 	glActiveTextureARB(GL_TEXTURE3_ARB);
 		glBindTexture(GL_TEXTURE_2D, infoTextureHandler->GetCurrentInfoTexture());
-
-	if (shadowHandler.ShadowsLoaded()) {
-		shadowHandler.SetupShadowTexSampler(GL_TEXTURE4);
-		// todo: cleanup shadowTextures removal
-		//glActiveTexture(GL_TEXTURE6); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
-	}
 
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 }

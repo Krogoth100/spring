@@ -173,7 +173,6 @@ void CWorldDrawer::Kill()
 	ISky::KillSky();
 	spring::SafeDelete(grassDrawer);
 	spring::SafeDelete(pathDrawer);
-	shadowHandler.Kill();
 	spring::SafeDelete(inMapDrawerView);
 
 	CFeatureDrawer::KillStatic(gu->globalReload);

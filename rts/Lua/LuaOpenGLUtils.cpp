@@ -747,10 +747,6 @@ void LuaMatTexture::Bind() const
 			default:                      {                         } break;
 		}
 	}
-
-	if (type == LUATEX_SHADOWMAP)
-		shadowHandler.SetupShadowTexSamplerRaw();
-
 }
 
 
@@ -758,9 +754,6 @@ void LuaMatTexture::Unbind() const
 {
 	if (type == LUATEX_NONE)
 		return;
-
-	if (type == LUATEX_SHADOWMAP)
-		shadowHandler.ResetShadowTexSamplerRaw();
 
 	if (!enable)
 		return;
@@ -838,12 +831,6 @@ std::tuple<int, int, int> LuaMatTexture::GetSize() const
 		} break;
 
 
-		case LUATEX_SHADOWMAP: {
-			return ReturnHelper(shadowHandler.shadowMapSize);
-		} break;
-		case LUATEX_SHADOWCOLOR: {
-			return ReturnHelper(shadowHandler.shadowMapSize);
-		} break;
 		case LUATEX_HEIGHTMAP: {
 			if (heightMapTexture != nullptr)
 				return ReturnHelper(heightMapTexture->GetSizeX(), heightMapTexture->GetSizeY());

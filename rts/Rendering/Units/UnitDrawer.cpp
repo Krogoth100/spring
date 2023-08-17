@@ -1650,77 +1650,7 @@ void CUnitDrawerGL4::DrawOpaqueAIUnit(const CUnitDrawerData::TempDrawUnit& unit)
 
 void CUnitDrawerGL4::DrawUnitModelBeingBuiltShadow(const CUnit* unit, bool noLuaCall) const
 {
-	auto& smv = S3DModelVAO::GetInstance();
-
-	const float3 stageBounds = { 0.0f, unit->model->CalcDrawHeight(), unit->buildProgress };
-
-	const float4 upperPlanes[] = {
-		{0.0f, -1.0f, 0.0f,  stageBounds.x + stageBounds.y * (stageBounds.z * 3.0f       )},
-		{0.0f, -1.0f, 0.0f,  stageBounds.x + stageBounds.y * (stageBounds.z * 3.0f - 1.0f)},
-		{0.0f, -1.0f, 0.0f,  stageBounds.x + stageBounds.y * (stageBounds.z * 3.0f - 2.0f)},
-		{0.0f,  0.0f, 0.0f,                                                          0.0f },
-	};
-	const float4 lowerPlanes[] = {
-		{0.0f,  1.0f, 0.0f, -stageBounds.x - stageBounds.y * (stageBounds.z * 10.0f - 9.0f)},
-		{0.0f,  1.0f, 0.0f, -stageBounds.x - stageBounds.y * (stageBounds.z * 3.0f  - 2.0f)},
-		{0.0f,  1.0f, 0.0f,                                                           0.0f },
-		{0.0f,  0.0f, 0.0f,                                                           0.0f },
-	};
-
-	Shader::IProgramObject* po = shadowHandler.GetShadowGenProg(CShadowHandler::SHADOWGEN_PROGRAM_MODEL_GL4);
-	assert(po);
-	assert(po->IsBound());
-
-	glPushAttrib(GL_POLYGON_BIT);
-
-	glEnable(GL_CLIP_DISTANCE0);
-	glEnable(GL_CLIP_DISTANCE1);
-
-	const auto SetClipPlane = [po](uint8_t idx, const float4& cp) {
-		switch (idx)
-		{
-		case 0: //upper construction clip plane
-			po->SetUniform("clipPlane0", cp.x, cp.y, cp.z, cp.w);
-			break;
-		case 1: //lower construction clip plane
-			po->SetUniform("clipPlane1", cp.x, cp.y, cp.z, cp.w);
-			break;
-		default:
-			assert(false);
-			break;
-		}
-	};
-
-	{
-		// wireframe, unconditional
-		SetClipPlane(0, upperPlanes[BUILDSTAGE_WIRE]);
-		SetClipPlane(1, lowerPlanes[BUILDSTAGE_WIRE]);
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		smv.SubmitImmediately(unit, GL_TRIANGLES);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
-
-	if (stageBounds.z > 1.0f / 3.0f) {
-		// flat-colored, conditional
-		SetClipPlane(0, upperPlanes[BUILDSTAGE_FLAT]);
-		SetClipPlane(1, lowerPlanes[BUILDSTAGE_FLAT]);
-
-		smv.SubmitImmediately(unit, GL_TRIANGLES);
-	}
-
-	SetClipPlane(0, float4{ 0.0f, 0.0f, 0.0f, 1.0f }); //default
-	SetClipPlane(1, float4{ 0.0f, 0.0f, 0.0f, 1.0f }); //default;
-
-	glDisable(GL_CLIP_DISTANCE1);
-	glDisable(GL_CLIP_DISTANCE0);
-
-	if (stageBounds.z > 2.0f / 3.0f) {
-		// fully-shaded, conditional
-		smv.SubmitImmediately(unit, GL_TRIANGLES);
-	}
-
-	glPopAttrib();
+	// todo: -shader render cleanup
 }
 
 void CUnitDrawerGL4::DrawUnitModelBeingBuiltOpaque(const CUnit* unit, bool noLuaCall) const

@@ -37,12 +37,6 @@ void CModelDrawerHelper::EnableTexturesCommon()
 	glActiveTexture(GL_TEXTURE1);
 	glEnable(GL_TEXTURE_2D);
 
-	if (shadowHandler.ShadowsLoaded()) {
-		shadowHandler.SetupShadowTexSampler(GL_TEXTURE2, true);
-		// todo: cleanup shadowTextures removal
-		//glActiveTexture(GL_TEXTURE3); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
-	}
-
 	if (CModelDrawerConcept::UseAdvShading()) {
 		// todo: cleanup cubemap removal
 		/*glActiveTexture(GL_TEXTURE4);
@@ -62,9 +56,6 @@ void CModelDrawerHelper::DisableTexturesCommon()
 {
 	glActiveTexture(GL_TEXTURE1);
 	glDisable(GL_TEXTURE_2D);
-
-	if (shadowHandler.ShadowsLoaded())
-		shadowHandler.ResetShadowTexSampler(GL_TEXTURE2, true);
 
 	if (CModelDrawerConcept::UseAdvShading()) {
 		glActiveTexture(GL_TEXTURE3);

@@ -28,34 +28,10 @@
 #include "lib/fmt/format.h"
 
 CONFIG(int, Shadows).defaultValue(2).headlessValue(-1).minimumValue(-1).safemodeValue(-1).description("Sets whether shadows are rendered.\n-1:=forceoff, 0:=off, 1:=full, 2:=fast (skip terrain)"); //FIXME document bitmask
-CONFIG(int, ShadowMapSize).defaultValue(CShadowHandler::DEF_SHADOWMAP_SIZE).minimumValue(32).description("Sets the resolution of shadows. Higher numbers increase quality at the cost of performance.");
 CONFIG(int, ShadowProjectionMode).defaultValue(CShadowHandler::SHADOWPROMODE_CAM_CENTER);
 CONFIG(bool, ShadowColorMode).defaultValue(true).description("Whether the colorbuffer of shadowmap FBO is RGB vs greyscale(to conserve some VRAM)");
 
 CShadowHandler shadowHandler;
-
-void CShadowHandler::Reload(const char* argv)
-{
-	int nextShadowConfig = (shadowConfig + 1) & 0xF;
-	int nextShadowMapSize = shadowMapSize;
-	int nextShadowProMode = shadowProMode;
-	int nextShadowColorMode = shadowColorMode;
-
-	if (argv != nullptr)
-		(void) sscanf(argv, "%i %i %i %i", &nextShadowConfig, &nextShadowMapSize, &nextShadowProMode, &nextShadowColorMode);
-
-	// do nothing without a parameter change
-	if (nextShadowConfig == shadowConfig && nextShadowMapSize == shadowMapSize && nextShadowProMode == shadowProMode && nextShadowColorMode == shadowColorMode)
-		return;
-
-	configHandler->Set("Shadows", nextShadowConfig & 0xF);
-	configHandler->Set("ShadowMapSize", Clamp(nextShadowMapSize, int(MIN_SHADOWMAP_SIZE), int(MAX_SHADOWMAP_SIZE)));
-	configHandler->Set("ShadowProjectionMode", Clamp(nextShadowProMode, int(SHADOWPROMODE_MAP_CENTER), int(SHADOWPROMODE_MIX_CAMMAP)));
-	configHandler->Set("ShadowColorMode", static_cast<bool>(nextShadowColorMode));
-
-	Kill();
-	Init();
-}
 
 void CShadowHandler::Init()
 {
@@ -63,7 +39,6 @@ void CShadowHandler::Init()
 	firstInit = false;
 
 	shadowConfig  = configHandler->GetInt("Shadows");
-	shadowMapSize = configHandler->GetInt("ShadowMapSize");
 	// disabled; other option usually produces worse resolution
 	shadowProMode = configHandler->GetInt("ShadowProjectionMode");
 	//shadowProMode = SHADOWPROMODE_CAM_CENTER;
@@ -122,13 +97,6 @@ void CShadowHandler::Init()
 	}
 
 	LoadProjectionMatrix(CCameraHandler::GetCamera(CCamera::CAMTYPE_SHADOW));
-	LoadShadowGenShaders();
-}
-
-void CShadowHandler::Kill()
-{
-	shaderHandler->ReleaseProgramObjects("[ShadowHandler]");
-	shadowGenProgs.fill(nullptr);
 }
 
 
@@ -193,123 +161,6 @@ void CShadowHandler::LoadProjectionMatrix(const CCamera* shadowCam)
 
 	// if using ZTO clip-space, cancel out the above remap for Z
 	spm = ccm * spm;
-}
-
-void CShadowHandler::LoadShadowGenShaders()
-{
-	if (!globalRendering->haveGLSL)
-		return;
-
-	#define sh shaderHandler
-	static const std::string shadowGenProgHandles[SHADOWGEN_PROGRAM_COUNT] = {
-		"ShadowGenShaderProgModel",
-		"ShadowGenShaderProgModelGL4",
-		"ShadowGenshaderProgMap",
-		"ShadowGenshaderProgProjectileOpaque",
-	};
-	static const std::string shadowGenProgDefines[SHADOWGEN_PROGRAM_COUNT] = {
-		"#define SHADOWGEN_PROGRAM_MODEL\n",
-		"#define SHADOWGEN_PROGRAM_MODEL_GL4\n",
-		"#define SHADOWGEN_PROGRAM_MAP\n",
-		"#define SHADOWGEN_PROGRAM_PROJ_OPAQ\n",
-	};
-
-	// #version has to be added here because it is conditional
-	static const std::string versionDefs[3] = {
-		"#version 130\n",
-		"#version " + IntToString(globalRendering->supportFragDepthLayout? 420: 130) + "\n",
-	};
-
-	static const std::string extraDefs =
-		("#define SUPPORT_CLIP_CONTROL " + IntToString(globalRendering->supportClipSpaceControl) + "\n") +
-		("#define SUPPORT_DEPTH_LAYOUT " + IntToString(globalRendering->supportFragDepthLayout) + "\n");
-
-	for (int i = 0; i < SHADOWGEN_PROGRAM_COUNT; i++) {
-		if (i == SHADOWGEN_PROGRAM_MODEL_GL4)
-			continue; //special path
-
-		if (i == SHADOWGEN_PROGRAM_MAP)
-			continue; //special path
-
-		Shader::IProgramObject* po = sh->CreateProgramObject("[ShadowHandler]", shadowGenProgHandles[i] + "GLSL");
-
-		po->AttachShaderObject(sh->CreateShaderObject("GLSL/ShadowGenVertProg.glsl", versionDefs[0] + shadowGenProgDefines[i] + extraDefs, GL_VERTEX_SHADER));
-		po->AttachShaderObject(sh->CreateShaderObject("GLSL/ShadowGenFragProg.glsl", versionDefs[1] + shadowGenProgDefines[i] + extraDefs, GL_FRAGMENT_SHADER));
-
-		po->Link();
-		po->Enable();
-		po->SetUniform("alphaMaskTex", 0);
-		po->SetUniform("alphaParams", mapInfo->map.voidAlphaMin, 0.0f);
-		po->Disable();
-		po->Validate();
-
-		if (!po->IsValid()) {
-			po->RemoveShaderObject(GL_FRAGMENT_SHADER);
-			po->AttachShaderObject(sh->CreateShaderObject("GLSL/ShadowGenFragProg.glsl", versionDefs[0] + shadowGenProgDefines[i] + extraDefs, GL_FRAGMENT_SHADER));
-			po->Link();
-			po->Enable();
-			po->SetUniform("alphaMaskTex", 0);
-			po->SetUniform("alphaParams", mapInfo->map.voidAlphaMin, 0.0f);
-			po->Disable();
-			po->Validate();
-		}
-
-		shadowGenProgs[i] = po;
-	}
-	{
-		Shader::IProgramObject* po = sh->CreateProgramObject("[ShadowHandler]", shadowGenProgHandles[SHADOWGEN_PROGRAM_MAP] + "GLSL");
-
-		po->AttachShaderObject(sh->CreateShaderObject("GLSL/ShadowGenVertMapProg.glsl", versionDefs[0] + shadowGenProgDefines[SHADOWGEN_PROGRAM_MAP] + extraDefs, GL_VERTEX_SHADER));
-		po->AttachShaderObject(sh->CreateShaderObject("GLSL/ShadowGenFragProg.glsl"   , versionDefs[1] + shadowGenProgDefines[SHADOWGEN_PROGRAM_MAP] + extraDefs, GL_FRAGMENT_SHADER));
-		po->BindAttribLocation("vertexPos", 0);
-		po->Link();
-		po->Enable();
-		po->SetUniform("alphaMaskTex", 0);
-		po->SetUniform("heightMapTex", 1);
-		po->SetUniform("alphaParams", mapInfo->map.voidAlphaMin, 0.0f);
-		po->SetUniform("mapSize",
-			static_cast<float>(mapDims.mapx * SQUARE_SIZE), static_cast<float>(mapDims.mapy * SQUARE_SIZE),
-					   1.0f / (mapDims.mapx * SQUARE_SIZE),            1.0f / (mapDims.mapy * SQUARE_SIZE)
-		);
-		po->SetUniform("texSquare", 0, 0);
-		po->Disable();
-		po->Validate();
-
-		if (!po->IsValid()) {
-			po->RemoveShaderObject(GL_FRAGMENT_SHADER);
-			po->AttachShaderObject(sh->CreateShaderObject("GLSL/ShadowGenFragProg.glsl", versionDefs[0] + shadowGenProgDefines[SHADOWGEN_PROGRAM_MAP] + extraDefs, GL_FRAGMENT_SHADER));
-			po->Link();
-			po->Enable();
-			po->SetUniform("alphaMaskTex", 0);
-			po->SetUniform("heightMapTex", 1);
-			po->SetUniform("alphaParams", mapInfo->map.voidAlphaMin, 0.0f);
-			po->SetUniform("mapSize",
-				static_cast<float>(mapDims.mapx * SQUARE_SIZE), static_cast<float>(mapDims.mapy * SQUARE_SIZE),
-						   1.0f / (mapDims.mapx * SQUARE_SIZE),            1.0f / (mapDims.mapy * SQUARE_SIZE)
-			);
-			po->SetUniform("texSquare", 0, 0);
-			po->Disable();
-			po->Validate();
-		}
-
-		shadowGenProgs[SHADOWGEN_PROGRAM_MAP] = po;
-	}
-	if (globalRendering->haveGL4) {
-		Shader::IProgramObject* po = sh->CreateProgramObject("[ShadowHandler]", shadowGenProgHandles[SHADOWGEN_PROGRAM_MODEL_GL4] + "GLSL");
-
-		po->AttachShaderObject(sh->CreateShaderObject("GLSL/ShadowGenVertProgGL4.glsl", shadowGenProgDefines[SHADOWGEN_PROGRAM_MODEL_GL4] + extraDefs, GL_VERTEX_SHADER));
-		po->AttachShaderObject(sh->CreateShaderObject("GLSL/ShadowGenFragProgGL4.glsl", shadowGenProgDefines[SHADOWGEN_PROGRAM_MODEL_GL4] + extraDefs, GL_FRAGMENT_SHADER));
-		po->Link();
-		po->Enable();
-		po->SetUniform("alphaCtrl", 0.5f, 1.0f, 0.0f, 0.0f); // test > 0.5
-		po->Disable();
-		po->Validate();
-
-		shadowGenProgs[SHADOWGEN_PROGRAM_MODEL_GL4] = po;
-	}
-
-	shadowsLoaded = true;
-	#undef sh
 }
 
 
@@ -394,7 +245,9 @@ void CShadowHandler::SetShadowCamera(CCamera* shadowCam)
 	// convert xy-diameter to radius
 	shadowCam->SetFrustumScales(shadowProjScales * float4(0.5f, 0.5f, 1.0f, 1.0f));
 	shadowCam->UpdateFrustum();
-	shadowCam->UpdateLoadViewport(0, 0, shadowMapSize, shadowMapSize);
+	// todo: -shadow render cleanup
+	//shadowCam->UpdateLoadViewport(0, 0, shadowMapSize, shadowMapSize);
+	shadowCam->UpdateLoadViewport(0, 0, 1, 1);
 	// load matrices into gl_{ModelView,Projection}Matrix
 	shadowCam->Update({false, false, false, false, false});
 

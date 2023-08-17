@@ -272,8 +272,9 @@ public:
 			return true;
 		}
 
-		shadowHandler.Reload(((action.GetArgs()).empty())? nullptr: (action.GetArgs()).c_str());
-		LOG("Set \"shadows\" config-parameter to %i", shadowHandler.shadowConfig);
+		// todo: -shadow render cleanup
+		//shadowHandler.Reload(((action.GetArgs()).empty())? nullptr: (action.GetArgs()).c_str());
+		//LOG("Set \"shadows\" config-parameter to %i", shadowHandler.shadowConfig);
 		return true;
 	}
 };

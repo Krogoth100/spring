@@ -306,13 +306,6 @@ void LegacyTrackHandler::BindTextures()
 		SetTexGen(1.0f / (mapDims.pwr2mapx * SQUARE_SIZE), 1.0f / (mapDims.pwr2mapy * SQUARE_SIZE), 0, 0);
 	}
 
-	if (shadowHandler.ShadowsLoaded()) {
-		shadowHandler.SetupShadowTexSampler(GL_TEXTURE2, true);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); //??
-		// TODO replace this madness
-		// glActiveTexture(GL_TEXTURE11); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
-	}
-
 	if (infoTextureHandler->IsEnabled()) {
 		glActiveTexture(GL_TEXTURE3);
 		glEnable(GL_TEXTURE_2D);
@@ -344,9 +337,6 @@ void LegacyTrackHandler::KillTextures()
 		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA_ARB, GL_TEXTURE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	}
-
-	if (shadowHandler.ShadowsLoaded())
-		shadowHandler.ResetShadowTexSampler(GL_TEXTURE2, true);
 
 	{
 		glActiveTexture(GL_TEXTURE1);
