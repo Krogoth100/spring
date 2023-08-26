@@ -11,6 +11,8 @@
 namespace Sol
 {
 
+using Number = lua_Number;
+
 // todo: common util
 namespace Impl {
 	template<int Counter, class... Types>

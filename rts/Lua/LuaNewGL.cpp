@@ -1,7 +1,6 @@
 #include "LuaNewGL.h"
 
 #include "lib/sol2/sol.hpp"
-//#include "lib/lua/include/lua.h" //for lua_Number
 
 #include "Rendering/GL/myGL.h"
 #include "Rendering/GL/SubState.h"
