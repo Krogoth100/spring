@@ -164,6 +164,9 @@ private:
 	std::vector<std::pair<const int, const BufferAttribDef>> bufferAttribDefsVec;
 	std::map<const int, BufferAttribDef> bufferAttribDefs;
 
+	//!temp?
+	GLenum iboIndexType;
+
 	size_t lastMemorizedUploadEndPosition = 0;
 
 private:

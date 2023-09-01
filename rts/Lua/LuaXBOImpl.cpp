@@ -453,6 +453,8 @@ bool LuaXBOImpl::DefineElementArray(const sol::optional<sol::object> attribDefAr
 
 	attributesCount = 1;
 
+	iboIndexType = indexType;
+
 	return true;
 }
 

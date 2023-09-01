@@ -581,7 +581,7 @@ void LuaVAOImpl::Draw(sol::optional<GLsizei> count)
 
 	const GLsizei instanceCount = count.value_or(luaSBO? luaSBO->GetLastMemorizedUploadEndPosition()/sizeof(SInstanceData) : 1);
 	if (luaIBO) {
-		glDrawElementsInstanced(drawMode, luaIBO->elementsCount, LuaXBOImpl::DEFAULT_INDX_ATTR_TYPE, 0, instanceCount);
+		glDrawElementsInstanced(drawMode, luaIBO->elementsCount, luaIBO->iboIndexType, 0, instanceCount);
 	} else {
 		glDrawArraysInstanced(drawMode, 0, luaVBO->elementsCount, instanceCount);
 	}
@@ -606,7 +606,7 @@ void LuaVAOImpl::DrawReusedBins(const LuaVAOImplSP& luaVAO, const sol::function 
 		for (const auto& bin : bins) {
 			sol::optional<bool> passed = binGateFunc(bin.objIds.front(), bin.sampleDefId);
 			if (passed.value_or(true))
-				glDrawElementsInstancedBaseInstance(drawMode, luaIBO->elementsCount, LuaXBOImpl::DEFAULT_INDX_ATTR_TYPE, 0, bin.instanceData.size(), binFirstInstance);
+				glDrawElementsInstancedBaseInstance(drawMode, luaIBO->elementsCount, luaIBO->iboIndexType, 0, bin.instanceData.size(), binFirstInstance);
 			binFirstInstance += bin.instanceData.size();
 		}
 	} else {
