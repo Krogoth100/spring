@@ -14,6 +14,8 @@
 #include "System/Log/ILog.h"
 #include "Helpers/Sol.h"
 
+#include <utility>
+
 using namespace GL::State;
 
 
@@ -24,7 +26,7 @@ using namespace GL::State;
 
 namespace Impl {
 	template<class Type, auto glClearBufferFuncPtrPtr>
-	inline void ClearBuffer(GLenum bufferType, GLint drawBuffer, sol::optional<float> r, sol::optional<float> g, sol::optional<float> b, sol::optional<float> a) {
+	inline void ClearBuffer(GLenum bufferType, GLint drawBuffer, SOL_OPTIONAL_4(Sol::Number, r,g,b,a)) {
 		Type values[4];
 		values[0] = spring::SafeCast<Type>(r.value_or(0));
 		values[1] = spring::SafeCast<Type>(g.value_or(0));
@@ -33,9 +35,12 @@ namespace Impl {
 		(*glClearBufferFuncPtrPtr)(bufferType, drawBuffer, values);
 	}
 
-	void ClearBuffer(GLenum attachmentInternalFormat, GLenum bufferType, GLenum drawBuffer,
-		sol::optional<float> r, sol::optional<float> g, sol::optional<float> b, sol::optional<float> a)
+	void ClearBuffer(GLenum attachment, GLenum bufferType, GLenum drawBuffer, SOL_OPTIONAL_4(Sol::Number, r,g,b,a), sol::this_state& lua)
 	{
+		const auto activeLuaFBO = CLuaHandle::GetActiveFBOs(lua).GetActiveDrawFBO();
+		const GLenum attachmentInternalFormat = activeLuaFBO? activeLuaFBO->GetAttachmentFormat(attachment) : GL_RGBA8;
+		// if not a Lua FBO, it may be default framebuffer; proceed with a typical format
+
 		switch(attachmentInternalFormat) {
 		case GL_R8UI:
 		case GL_RG8UI:
@@ -68,42 +73,25 @@ namespace Impl {
 }
 
 /* Lua */
-void ClearBuffer(sol::optional<GLenum> slot_, sol::optional<float> r, sol::optional<float> g, sol::optional<float> b, sol::optional<float> a, sol::this_state lua)
+void ClearBuffer(sol::optional<GLenum> slot_, SOL_OPTIONAL_4(Sol::Number, r,g,b,a), sol::this_state lua)
 {
 	const GLenum slot = slot_.value_or(1);
 	assert(slot >= 1);
 
 	//CheckDrawingEnabled(lua, __func__);
 
-	const GLenum bufferType = GL_COLOR;
-	const GLenum attachment = GL_COLOR_ATTACHMENT0+slot-1;
-	const GLenum drawBuffer = slot-1;
-
-	const auto activeLuaFBO = CLuaHandle::GetActiveFBOs(lua).GetActiveDrawFBO();
-	const GLenum attachmentInternalFormat = activeLuaFBO? activeLuaFBO->GetAttachmentFormat(attachment) : GL_RGBA8;
-	// if not a Lua FBO, it may be default framebuffer; proceed with a typical format
-
-	Impl::ClearBuffer(attachmentInternalFormat, bufferType, drawBuffer, r,g,b,a);
+	Impl::ClearBuffer(GL_COLOR_ATTACHMENT0+slot-1, GL_COLOR, slot-1, r,g,b,a, lua);
 }
 
 /* Lua */
-void ClearBuffer(const char* slot, sol::optional<float> r, sol::optional<float> g, sol::optional<float> b, sol::optional<float> a, sol::this_state lua)
+void ClearBuffer(const char* slot, SOL_OPTIONAL_4(Sol::Number, r,g,b,a), sol::this_state lua)
 {
 	assert(hashString(slot) == hashString("depth") || hashString(slot) == hashString("stencil"));
+	const bool isDepth = (slot[0] == 'd');
 
 	//CheckDrawingEnabled(lua, __func__);
 
-	const bool isDepth = (slot[0] == 'd');
-
-	const GLenum bufferType = isDepth? GL_DEPTH : GL_STENCIL;
-	const GLenum attachment = isDepth? GL_DEPTH_ATTACHMENT : GL_STENCIL_ATTACHMENT;
-	constexpr GLenum drawBuffer = 0;
-
-	const auto activeLuaFBO = CLuaHandle::GetActiveFBOs(lua).GetActiveDrawFBO();
-	const GLenum attachmentInternalFormat = activeLuaFBO? activeLuaFBO->GetAttachmentFormat(attachment) : GL_RGBA8;
-	// if not a Lua FBO, it may be default framebuffer; proceed with a typical format
-
-	Impl::ClearBuffer(attachmentInternalFormat, bufferType, drawBuffer, r,g,b,a);
+	Impl::ClearBuffer(isDepth? GL_DEPTH_ATTACHMENT : GL_STENCIL_ATTACHMENT, isDepth? GL_DEPTH : GL_STENCIL, 0, r,g,b,a, lua);
 }
 
 
@@ -163,20 +151,28 @@ Sol::MultipleNumbers<4> ReadAttachmentPixel(const char* slot, GLint x, GLint y, 
 //  Mesh Buffers
 
 
+namespace Impl {
+	std::optional<std::pair<GLuint, GLuint>> EngineModelMeshBufferBindingPoints;
+}
+
+/* Lua */
+void UnbindEngineModelMeshBuffers()
+{
+	if (!Impl::EngineModelMeshBufferBindingPoints.has_value()) return;
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Impl::EngineModelMeshBufferBindingPoints.first, 0);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Impl::EngineModelMeshBufferBindingPoints.second, 0);
+	Impl::EngineModelMeshBufferBindingPoints = std::nullopt;
+}
+
 /* Lua */
 void BindEngineModelMeshBuffers(GLuint vboBindingPoint, GLuint iboBindingPoint)
 {
+	if (Impl::EngineModelMeshBufferBindingPoints.has_value()) UnbindEngineModelMeshBuffers();
 	const XBO* vbo = S3DModelVAO::GetInstance().GetVertVBO();
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, vboBindingPoint, vbo->GetId());
 	const XBO* ibo = S3DModelVAO::GetInstance().GetIndxVBO();
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, iboBindingPoint, ibo->GetId());
-}
-
-/* Lua */
-void UnbindEngineModelMeshBuffers(GLuint vboBindingPoint, GLuint iboBindingPoint)
-{
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, vboBindingPoint, 0);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, iboBindingPoint, 0);
+	Impl::EngineModelMeshBufferBindingPoints = std::make_pair(vboBindingPoint, iboBindingPoint);
 }
 
 /* Lua */
@@ -214,8 +210,8 @@ bool LuaNewGL::PushEntries(lua_State* L)
 
 	gl.create_named("PF",
 		"ClearBuffer", sol::overload(
-			sol::resolve<void(sol::optional<GLenum>, sol::optional<float>,sol::optional<float>,sol::optional<float>,sol::optional<float>, sol::this_state)>(&ClearBuffer),
-			sol::resolve<void(const char*, sol::optional<float>,sol::optional<float>,sol::optional<float>,sol::optional<float>, sol::this_state)>(&ClearBuffer)
+			sol::resolve<void(sol::optional<GLenum>, SOL_OPTIONAL_TYPE_4(Sol::Number), sol::this_state)>(&ClearBuffer),
+			sol::resolve<void(const char*, SOL_OPTIONAL_TYPE_4(Sol::Number), sol::this_state)>(&ClearBuffer)
 		),
 		"ReadAttachmentPixel", sol::overload(
 			sol::resolve<Sol::MultipleNumbers<4>(sol::optional<GLenum>, GLint,GLint, sol::this_state)>(&ReadAttachmentPixel),
