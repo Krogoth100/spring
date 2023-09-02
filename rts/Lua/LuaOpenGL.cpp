@@ -31,7 +31,7 @@
 #include "LuaShaders.h"
 #include "LuaTextures.h"
 #include "LuaUtils.h"
-#include "LuaVAO.h"
+#include "LuaMeshDrawer.h"
 #include "LuaXBO.h"
 #include "LuaNewGL.h"
 
@@ -483,7 +483,7 @@ bool LuaOpenGL::PushEntries(lua_State* L)
 	 	LuaRBOs::PushEntries(L);
 	}
 
-	LuaVAOs::PushEntries(L);
+	LuaMeshDrawers::PushEntries(L);
 	LuaXBOs::PushEntries(L);
 	LuaNewGL::PushEntries(L);
 

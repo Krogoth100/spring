@@ -13,7 +13,7 @@
 #include "LuaFBOs.h"
 #include "LuaRBOs.h"
 #include "LuaXBO.h"
-#include "LuaVAO.h"
+#include "LuaMeshDrawer.h"
 #include "LuaDisplayLists.h"
 #endif
 
@@ -114,7 +114,7 @@ public:
 	LuaFBOs fbos;
 	LuaRBOs rbos;
 	LuaXBOs xbos;
-	LuaVAOs vaos;
+	LuaMeshDrawers meshDrawers;
 	CLuaDisplayLists displayLists;
 
 	GLMatrixStateTracker glMatrixTracker;

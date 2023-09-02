@@ -1,4 +1,4 @@
-#include "LuaVAOImpl.h"
+#include "LuaMeshDrawerImpl.h"
 
 #include <algorithm>
 #include <type_traits>
@@ -22,15 +22,15 @@
 
 
 /******************************************************************************
- * Vertex Array Object
- * @classmod VAO
+ * Mesh Drawer
+ * @classmod MeshDrawer
  *
- * @see LuaVAO.GetVAO
- * @see rts/Lua/LuaVAOImpl.cpp
+ * @see LuaMeshDrawer.GetMeshDrawer
+ * @see rts/Lua/LuaMeshDrawerImpl.cpp
 ******************************************************************************/
 
 
-LuaVAOImpl::LuaVAOImpl(const LuaXBOImplSP& luaVBO, const sol::optional<LuaXBOImplSP>& luaIBO, const sol::optional<LuaXBOImplSP>& luaSBO)
+LuaMeshDrawerImpl::LuaMeshDrawerImpl(const LuaXBOImplSP& luaVBO, const sol::optional<LuaXBOImplSP>& luaIBO, const sol::optional<LuaXBOImplSP>& luaSBO)
 	: vao{nullptr}
 
 	, luaVBO(luaVBO)
@@ -43,7 +43,7 @@ LuaVAOImpl::LuaVAOImpl(const LuaXBOImplSP& luaVBO, const sol::optional<LuaXBOImp
 		for (const auto& v : luaVBO->bufferAttribDefs) {
 			for (const auto& i : luaSBO->bufferAttribDefs) {
 				if (v.first == i.first) {
-					LuaUtils::SolLuaError("[LuaVAOImpl::%s] Vertex and Instance LuaXBO have defined a duplicate attribute [%d]", __func__, v.first);
+					LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s] Vertex and Instance LuaXBO have defined a duplicate attribute [%d]", __func__, v.first);
 				}
 			}
 		}
@@ -53,10 +53,10 @@ LuaVAOImpl::LuaVAOImpl(const LuaXBOImplSP& luaVBO, const sol::optional<LuaXBOImp
 
 /***
  *
- * @function VAO:Delete
+ * @function MeshDrawer:Delete
  * @treturn nil
  */
-void LuaVAOImpl::Delete()
+void LuaMeshDrawerImpl::Delete()
 {
 	luaVBO = nullptr;
 	luaSBO = nullptr;
@@ -65,12 +65,12 @@ void LuaVAOImpl::Delete()
 	vao = nullptr;
 }
 
-LuaVAOImpl::~LuaVAOImpl()
+LuaMeshDrawerImpl::~LuaMeshDrawerImpl()
 {
 	Delete();
 }
 
-bool LuaVAOImpl::Supported()
+bool LuaMeshDrawerImpl::Supported()
 {
 	static bool supported = XBO::IsSupported(GL_ARRAY_BUFFER) && VAO::IsSupported() && GLEW_ARB_instanced_arrays && GLEW_ARB_draw_elements_base_vertex && GLEW_ARB_multi_draw_indirect;
 	return supported;
@@ -78,14 +78,14 @@ bool LuaVAOImpl::Supported()
 
 
 template<typename TObj>
-const SIndexAndCount LuaVAOImpl::GetDrawIndicesImpl(int id)
+const SIndexAndCount LuaMeshDrawerImpl::GetDrawIndicesImpl(int id)
 {
 	const TObj* obj = LuaUtils::SolIdToObject<TObj>(id, __func__); //wrong ids are handles in LuaUtils::SolIdToObject<>()
 	return GetDrawIndicesImpl<TObj>(obj);
 }
 
 template<typename TObj>
-const SIndexAndCount LuaVAOImpl::GetDrawIndicesImpl(const TObj* obj)
+const SIndexAndCount LuaMeshDrawerImpl::GetDrawIndicesImpl(const TObj* obj)
 {
 	static_assert(std::is_base_of_v<CSolidObject, TObj> || std::is_base_of_v<SolidObjectDef, TObj>);
 
@@ -95,7 +95,7 @@ const SIndexAndCount LuaVAOImpl::GetDrawIndicesImpl(const TObj* obj)
 }
 
 template<typename TObj>
-int LuaVAOImpl::AddObjectsToSubmissionImpl(int id)
+int LuaMeshDrawerImpl::AddObjectsToSubmissionImpl(int id)
 {
 	DrawCheckInput inputs{
 		std::nullopt,
@@ -112,7 +112,7 @@ int LuaVAOImpl::AddObjectsToSubmissionImpl(int id)
 }
 
 template<typename TObj>
-int LuaVAOImpl::AddObjectsToSubmissionImpl(const sol::stack_table& ids)
+int LuaMeshDrawerImpl::AddObjectsToSubmissionImpl(const sol::stack_table& ids)
 {
 	const std::size_t idsSize = ids.size(); //size() is very costly to do in the loop
 
@@ -138,9 +138,9 @@ int LuaVAOImpl::AddObjectsToSubmissionImpl(const sol::stack_table& ids)
 }
 
 template<typename TObj>
-SDrawElementsIndirectCommand LuaVAOImpl::DrawObjectGetCmdImpl(int id)
+SDrawElementsIndirectCommand LuaMeshDrawerImpl::DrawObjectGetCmdImpl(int id)
 {
-	const auto& indexAndCount = LuaVAOImpl::GetDrawIndicesImpl<TObj>(id);
+	const auto& indexAndCount = LuaMeshDrawerImpl::GetDrawIndicesImpl<TObj>(id);
 
 	return std::move(SDrawElementsIndirectCommand{
 		indexAndCount.count,
@@ -151,7 +151,7 @@ SDrawElementsIndirectCommand LuaVAOImpl::DrawObjectGetCmdImpl(int id)
 	});
 }
 
-void LuaVAOImpl::CheckDrawPrimitiveType(GLenum mode) const
+void LuaMeshDrawerImpl::CheckDrawPrimitiveType(GLenum mode) const
 {
 	switch (mode) {
 	case GL_POINTS:
@@ -168,11 +168,11 @@ void LuaVAOImpl::CheckDrawPrimitiveType(GLenum mode) const
 	case GL_PATCHES:
 		break;
 	default:
-		LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Using deprecated or incorrect primitive type (%d)", __func__, mode);
+		LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s]: Using deprecated or incorrect primitive type (%d)", __func__, mode);
 	}
 }
 
-void LuaVAOImpl::EnsureVAOInit()
+void LuaMeshDrawerImpl::EnsureVAOInit()
 {
 	if (vao &&
 		(luaVBO && luaVBO->GetId() == oldVBOId) &&
@@ -256,16 +256,16 @@ void LuaVAOImpl::EnsureVAOInit()
 	}
 }
 
-LuaVAOImpl::DrawCheckResult LuaVAOImpl::DrawCheck(GLenum mode, const DrawCheckInput& inputs, bool indexed)
+LuaMeshDrawerImpl::DrawCheckResult LuaMeshDrawerImpl::DrawCheck(GLenum mode, const DrawCheckInput& inputs, bool indexed)
 {
-	LuaVAOImpl::DrawCheckResult result{};
+	LuaMeshDrawerImpl::DrawCheckResult result{};
 
 	if (luaVBO)
 		luaVBO->UpdateModelsXBOElementCount(); //need to update elements count because underlyiing XBO could have been updated
 
 	if (indexed) {
 		if (!luaIBO)
-			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: No index buffer is attached. Did you succesfully call vao:AttachIndexBuffer()?", __func__);
+			LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s]: No index buffer is attached. Did you succesfully call meshDrawer:AttachIndexBuffer()?", __func__);
 
 		luaIBO->UpdateModelsXBOElementCount(); //need to update elements count because underlyiing XBO could have been updated
 
@@ -277,15 +277,15 @@ LuaVAOImpl::DrawCheckResult LuaVAOImpl::DrawCheck(GLenum mode, const DrawCheckIn
 			result.drawCount -= result.baseIndex; //adjust automatically
 
 		if (result.drawCount <= 0)
-			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Non-positive number of draw elements %d is requested", __func__, result.drawCount);
+			LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s]: Non-positive number of draw elements %d is requested", __func__, result.drawCount);
 
 		if (result.drawCount > luaIBO->elementsCount - result.baseIndex)
-			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested number of elements %d with offset %d exceeds buffer size %u", __func__, result.drawCount, result.baseIndex, luaIBO->elementsCount);
+			LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s]: Requested number of elements %d with offset %d exceeds buffer size %u", __func__, result.drawCount, result.baseIndex, luaIBO->elementsCount);
 
 	} else {
 		if (!luaVBO) {
 			if (!inputs.drawCount.has_value())
-				LuaUtils::SolLuaError("[LuaVAOImpl::%s]: In case vertex buffer is not attached, the drawCount param should be set explicitly", __func__);
+				LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s]: In case vertex buffer is not attached, the drawCount param should be set explicitly", __func__);
 
 			result.drawCount = inputs.drawCount.value();
 		}
@@ -296,7 +296,7 @@ LuaVAOImpl::DrawCheckResult LuaVAOImpl::DrawCheck(GLenum mode, const DrawCheckIn
 				result.drawCount -= result.baseIndex; //note baseIndex not baseVertex
 
 			if (result.drawCount > luaVBO->elementsCount - result.baseIndex)
-				LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested number of vertices %d with offset %d exceeds buffer size %u", __func__, result.drawCount, result.baseIndex, luaVBO->elementsCount);
+				LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s]: Requested number of vertices %d with offset %d exceeds buffer size %u", __func__, result.drawCount, result.baseIndex, luaVBO->elementsCount);
 		}
 	}
 
@@ -305,11 +305,11 @@ LuaVAOImpl::DrawCheckResult LuaVAOImpl::DrawCheck(GLenum mode, const DrawCheckIn
 
 	if (result.instCount > 0) {
 		if (luaSBO && (result.instCount > luaSBO->elementsCount - result.baseInstance))
-			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested number of instances %d with offset %d exceeds buffer size %u", __func__, result.instCount, result.baseInstance, luaSBO->elementsCount);
+			LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s]: Requested number of instances %d with offset %d exceeds buffer size %u", __func__, result.instCount, result.baseInstance, luaSBO->elementsCount);
 	}
 	else {
 		if (result.baseInstance > 0)
-			LuaUtils::SolLuaError("[LuaVAOImpl::%s]: Requested baseInstance [%d] and but zero instance count", __func__, result.baseInstance);
+			LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s]: Requested baseInstance [%d] and but zero instance count", __func__, result.baseInstance);
 	}
 
 	CheckDrawPrimitiveType(mode);
@@ -319,7 +319,7 @@ LuaVAOImpl::DrawCheckResult LuaVAOImpl::DrawCheck(GLenum mode, const DrawCheckIn
 }
 
 
-void LuaVAOImpl::ClearSubmission()
+void LuaMeshDrawerImpl::ClearSubmission()
 {
 	baseInstance = 0u;
 	submitCmds.clear();
@@ -328,34 +328,34 @@ void LuaVAOImpl::ClearSubmission()
 
 /***
  *
- * @function VAO:AddUnitDefsToSubmission
+ * @function MeshDrawer:AddUnitDefsToSubmission
  * @tparam number|{number,...} unitDefIDs
  * @treturn number submittedCount
  */
-int LuaVAOImpl::AddUnitDefsToSubmission(int id) { return AddObjectsToSubmissionImpl<UnitDef>(id); }
-int LuaVAOImpl::AddUnitDefsToSubmission(const sol::stack_table& ids) { return AddObjectsToSubmissionImpl<UnitDef>(ids); }
+int LuaMeshDrawerImpl::AddUnitDefsToSubmission(int id) { return AddObjectsToSubmissionImpl<UnitDef>(id); }
+int LuaMeshDrawerImpl::AddUnitDefsToSubmission(const sol::stack_table& ids) { return AddObjectsToSubmissionImpl<UnitDef>(ids); }
 
 
 /***
  *
- * @function VAO:AddFeatureDefsToSubmission
+ * @function MeshDrawer:AddFeatureDefsToSubmission
  * @tparam number|{number,...} featureDefIDs
  * @treturn number submittedCount
  */
-int LuaVAOImpl::AddFeatureDefsToSubmission(int id) { return AddObjectsToSubmissionImpl<FeatureDef>(id); }
-int LuaVAOImpl::AddFeatureDefsToSubmission(const sol::stack_table& ids) { return AddObjectsToSubmissionImpl<FeatureDef>(ids); }
+int LuaMeshDrawerImpl::AddFeatureDefsToSubmission(int id) { return AddObjectsToSubmissionImpl<FeatureDef>(id); }
+int LuaMeshDrawerImpl::AddFeatureDefsToSubmission(const sol::stack_table& ids) { return AddObjectsToSubmissionImpl<FeatureDef>(ids); }
 
 
 /***
  *
- * @function VAO:RemoveFromSubmission
+ * @function MeshDrawer:RemoveFromSubmission
  * @tparam number index
  * @treturn nil
  */
-void LuaVAOImpl::RemoveFromSubmission(int idx)
+void LuaMeshDrawerImpl::RemoveFromSubmission(int idx)
 {
 	if (idx < 0 || idx >= submitCmds.size()) {
-		LuaUtils::SolLuaError("[LuaVAOImpl::%s] wrong submitCmds index [%d]", __func__, idx);
+		LuaUtils::SolLuaError("[LuaMeshDrawerImpl::%s] wrong submitCmds index [%d]", __func__, idx);
 		return;
 	}
 
@@ -371,10 +371,10 @@ void LuaVAOImpl::RemoveFromSubmission(int idx)
 
 /***
  *
- * @function VAO:Submit
+ * @function MeshDrawer:Submit
  * @treturn nil
  */
-void LuaVAOImpl::Submit()
+void LuaMeshDrawerImpl::Submit()
 {
 	vao->Bind();
 	glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, submitCmds.data(), submitCmds.size(), sizeof(SDrawElementsIndirectCommand));
@@ -388,7 +388,7 @@ void LuaVAOImpl::Submit()
 //  Models
 
 
-void LuaVAOImpl::EnsureBinsInit()
+void LuaMeshDrawerImpl::EnsureBinsInit()
 {
 	assert(luaSBO->GetAttributeCount() == 1);
 
@@ -397,7 +397,7 @@ void LuaVAOImpl::EnsureBinsInit()
 
 
 template<typename TObj>
-void LuaVAOImpl::Bins::UpdateImpl(const sol::stack_table& removedObjects, const sol::stack_table& addedObjects, sol::optional<size_t> removedCount, sol::optional<size_t> addedCount)
+void LuaMeshDrawerImpl::Bins::UpdateImpl(const sol::stack_table& removedObjects, const sol::stack_table& addedObjects, sol::optional<size_t> removedCount, sol::optional<size_t> addedCount)
 {
 	const size_t removedObjectCount = (removedCount.has_value()? removedCount.value() : removedObjects.size());
 	const size_t addedObjectCount = (addedCount.has_value()? addedCount.value() : addedObjects.size());
@@ -501,7 +501,7 @@ void LuaVAOImpl::Bins::UpdateImpl(const sol::stack_table& removedObjects, const 
 
 
 /* Lua */
-void LuaVAOImpl::UpdateUnitBins(const sol::stack_table& removedUnits, const sol::stack_table& addedUnits, sol::optional<size_t> removedCount, sol::optional<size_t> addedCount)
+void LuaMeshDrawerImpl::UpdateUnitBins(const sol::stack_table& removedUnits, const sol::stack_table& addedUnits, sol::optional<size_t> removedCount, sol::optional<size_t> addedCount)
 {
 	EnsureBinsInit();
 	bins->UpdateImpl<CUnit>(removedUnits, addedUnits, removedCount, addedCount);
@@ -509,14 +509,14 @@ void LuaVAOImpl::UpdateUnitBins(const sol::stack_table& removedUnits, const sol:
 
 
 /* Lua */
-void LuaVAOImpl::UpdateFeatureBins(const sol::stack_table& removedFeatures, const sol::stack_table& addedFeatures, sol::optional<size_t> removedCount, sol::optional<size_t> addedCount)
+void LuaMeshDrawerImpl::UpdateFeatureBins(const sol::stack_table& removedFeatures, const sol::stack_table& addedFeatures, sol::optional<size_t> removedCount, sol::optional<size_t> addedCount)
 {
 	EnsureBinsInit();
 	bins->UpdateImpl<CFeature>(removedFeatures, addedFeatures, removedCount, addedCount);
 }
 
 
-void LuaVAOImpl::UpdateBinsGPU()
+void LuaMeshDrawerImpl::UpdateBinsGPU()
 {
 	if (bins->requireInstanceDataUpload) {
 		const size_t firstChangedInstance = bins->firstChangedInstance;
@@ -528,7 +528,7 @@ void LuaVAOImpl::UpdateBinsGPU()
 
 
 /* Lua */
-void LuaVAOImpl::SubmitBins()
+void LuaMeshDrawerImpl::SubmitBins()
 {
 	EnsureBinsInit();
 	EnsureVAOInit();
@@ -540,7 +540,7 @@ void LuaVAOImpl::SubmitBins()
 
 
 /* Lua */
-void LuaVAOImpl::SubmitBins(const sol::function binPrepFunc)
+void LuaMeshDrawerImpl::SubmitBins(const sol::function binPrepFunc)
 {
 	EnsureBinsInit();
 	EnsureVAOInit();
@@ -566,14 +566,14 @@ void LuaVAOImpl::SubmitBins(const sol::function binPrepFunc)
 
 
 /* Lua */
-void LuaVAOImpl::SetDrawMode(GLenum drawMode_)
+void LuaMeshDrawerImpl::SetDrawMode(GLenum drawMode_)
 {
 	drawMode = drawMode_;
 }
 
 
 /* Lua */
-void LuaVAOImpl::Draw(sol::optional<GLsizei> count)
+void LuaMeshDrawerImpl::Draw(sol::optional<GLsizei> count)
 {
 	EnsureVAOInit();
 
@@ -591,15 +591,15 @@ void LuaVAOImpl::Draw(sol::optional<GLsizei> count)
 
 
 /* Lua */
-void LuaVAOImpl::DrawReusedBins(const LuaVAOImplSP& luaVAO, const sol::function binGateFunc)
+void LuaMeshDrawerImpl::DrawReusedBins(const LuaMeshDrawerImplSP& luaMeshDrawer, const sol::function binGateFunc)
 {
-	assert(luaVAO->bins);
+	assert(luaMeshDrawer->bins);
 
 	EnsureVAOInit();
 
 	vao->Bind();
 
-	const auto& bins = luaVAO->bins->bins;
+	const auto& bins = luaMeshDrawer->bins->bins;
 
 	GLuint binFirstInstance = 0;
 	if (luaIBO) {

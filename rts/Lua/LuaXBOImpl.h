@@ -14,7 +14,7 @@
 #include "Rendering/GL/XBO.h"
 #include "Rendering/Models/3DModelVAO.h"
 
-class LuaVAOImpl;
+class LuaMeshDrawerImpl;
 
 class LuaXBOImpl {
 public:
@@ -58,7 +58,7 @@ public:
 	inline size_t GetAttributeCount() const { return (size_t)attributesCount; }
 
 private:
-	// performed by VAO, leaves information; information is used to generate intuitive `defaults`, such as vao:Draw(`count`)
+	// performed by MeshDrawer, leaves information; information is used to generate intuitive `defaults`, such as meshDrawer:Draw(`count`)
 	inline void MemorizedUpload(size_t destStartPos, size_t destEndPos, const void* data)
 	{
 		assert(destStartPos <= destEndPos);
@@ -132,7 +132,7 @@ private:
 	template<typename TIn>
 	bool TransformAndRead(int& bytesRead, GLubyte*& mappedBuf, const int mappedBufferSizeInBytes, const int size, std::vector<lua_Number>& vec, const bool copyData);
 private:
-	friend class LuaVAOImpl;
+	friend class LuaMeshDrawerImpl;
 private:
 	struct BufferAttribDef {
 		GLenum type;

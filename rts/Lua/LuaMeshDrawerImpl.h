@@ -15,20 +15,20 @@
 class VAO;
 class LuaXBOImpl;
 
-class LuaVAOImpl {
+class LuaMeshDrawerImpl {
 public:
 	class Bins;
 
 	using LuaXBOImplSP = std::shared_ptr<LuaXBOImpl>; //my workaround to https://github.com/ThePhD/sol2/issues/1206
-	using LuaVAOImplSP = std::shared_ptr<LuaVAOImpl>;
+	using LuaMeshDrawerImplSP = std::shared_ptr<LuaMeshDrawerImpl>;
 public:
-	LuaVAOImpl(const LuaXBOImplSP& luaVBO, const sol::optional<LuaXBOImplSP>& luaIBO, const sol::optional<LuaXBOImplSP>& luaSBO);
+	LuaMeshDrawerImpl(const LuaXBOImplSP& luaVBO, const sol::optional<LuaXBOImplSP>& luaIBO, const sol::optional<LuaXBOImplSP>& luaSBO);
 
-	LuaVAOImpl(const LuaVAOImpl& lva) = delete;
-	LuaVAOImpl(LuaVAOImpl&& lva) = default;
+	LuaMeshDrawerImpl(const LuaMeshDrawerImpl&) = delete;
+	LuaMeshDrawerImpl(LuaMeshDrawerImpl&&) = default;
 
 	void Delete();
-	~LuaVAOImpl();
+	~LuaMeshDrawerImpl();
 public:
 	static bool Supported();
 public:
@@ -41,7 +41,7 @@ public:
 // Custom shapes
 	void SetDrawMode(GLenum drawMode);
 	void Draw(sol::optional<GLsizei> count);
-	void DrawReusedBins(const LuaVAOImplSP& luaVAO, const sol::function binGateFunc);
+	void DrawReusedBins(const LuaMeshDrawerImplSP& luaMeshDrawer, const sol::function binGateFunc);
 
 	// todo: cleanup
 	void ClearSubmission();
@@ -108,7 +108,7 @@ private:
 	std::vector<SDrawElementsIndirectCommand> submitCmds;
 };
 
-class LuaVAOImpl::Bins {
+class LuaMeshDrawerImpl::Bins {
 public:
 	inline Bins(std::vector<SDrawElementsIndirectCommand>& submitCmds_)
 	:	submitCmds(submitCmds_) {}
