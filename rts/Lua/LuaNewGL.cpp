@@ -159,8 +159,8 @@ namespace Impl {
 void UnbindEngineModelMeshBuffers()
 {
 	if (!Impl::EngineModelMeshBufferBindingPoints.has_value()) return;
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Impl::EngineModelMeshBufferBindingPoints.first, 0);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Impl::EngineModelMeshBufferBindingPoints.second, 0);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Impl::EngineModelMeshBufferBindingPoints->first, 0);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Impl::EngineModelMeshBufferBindingPoints->second, 0);
 	Impl::EngineModelMeshBufferBindingPoints = std::nullopt;
 }
 

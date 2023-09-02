@@ -2,6 +2,7 @@
 
 #include "lib/sol2/sol.hpp"
 
+#include "Rendering/GL/myGL.h"
 #include "Helpers/Sol.h"
 #include <cmath>
 
@@ -18,7 +19,7 @@ void SetHeightMapFromTexture(GLuint texture)
 }
 
 
-bool LuaNewMath::PushEntries(lua_State* L)
+bool LuaNewUnsynced::PushEntries(lua_State* L)
 {
 #if defined(__GNUG__) && defined(_DEBUG)
 	const int top = lua_gettop(L);
@@ -30,7 +31,7 @@ bool LuaNewMath::PushEntries(lua_State* L)
 		"SetHeightMapFromTexture", sol::overload(
 			sol::resolve<void(GLuint)>(&SetHeightMapFromTexture),
 			sol::resolve<void(GLuint, GLint,GLint, GLsizei,GLsizei)>(&SetHeightMapFromTexture)
-		),
+		)
 	);
 
 #if defined(__GNUG__) && defined(_DEBUG)
