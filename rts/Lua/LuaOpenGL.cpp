@@ -31,14 +31,14 @@
 #include "LuaShaders.h"
 #include "LuaTextures.h"
 #include "LuaUtils.h"
-#include "LuaVAO.h"
-#include "LuaVBO.h"
+#include "LuaMeshDrawer.h"
+#include "LuaXBO.h"
+#include "LuaNewGL.h"
 
 #include "Game/Camera.h"
 #include "Game/CameraHandler.h"
 #include "Game/UI/CommandColors.h"
 #include "Game/UI/MiniMap.h"
-#include "Map/BaseGroundDrawer.h"
 #include "Map/HeightMapTexture.h"
 #include "Map/MapInfo.h"
 #include "Map/ReadMap.h"
@@ -60,11 +60,10 @@
 #include "Rendering/Models/3DModel.h"
 #include "Rendering/Shaders/Shader.h"
 #include "Rendering/Textures/Bitmap.h"
+#include "Rendering/Textures/TextureFormat.h"
 #include "Rendering/Textures/TextureAtlas.h"
 #include "Rendering/Textures/NamedTextures.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
-#include "Rendering/Env/Particles/ProjectileDrawer.h"
 #include "Sim/Features/Feature.h"
 #include "Sim/Features/FeatureDef.h"
 #include "Sim/Features/FeatureDefHandler.h"
@@ -479,8 +478,9 @@ bool LuaOpenGL::PushEntries(lua_State* L)
 	 	LuaRBOs::PushEntries(L);
 	}
 
-	LuaVAOs::PushEntries(L);
-	LuaVBOs::PushEntries(L);
+	LuaMeshDrawers::PushEntries(L);
+	LuaXBOs::PushEntries(L);
+	LuaNewGL::PushEntries(L);
 
 	LuaFonts::PushEntries(L);
 
@@ -721,27 +721,12 @@ void LuaOpenGL::ResetDrawWorldPreUnit()
 
 void LuaOpenGL::EnableDrawWorldShadow()
 {
-	EnableCommon(DRAW_WORLD_SHADOW);
-	resetMatrixFunc = ResetWorldShadowMatrices;
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	glPolygonOffset(1.0f, 1.0f);
-
-	glEnable(GL_POLYGON_OFFSET_FILL);
-
-	// FIXME: map/proj/tree passes
-	Shader::IProgramObject* po = shadowHandler.GetShadowGenProg(CShadowHandler::SHADOWGEN_PROGRAM_MODEL);
-	po->Enable();
+	// todo: -shadow render cleanup
 }
 
 void LuaOpenGL::DisableDrawWorldShadow()
 {
-	glDisable(GL_POLYGON_OFFSET_FILL);
-
-	Shader::IProgramObject* po = shadowHandler.GetShadowGenProg(CShadowHandler::SHADOWGEN_PROGRAM_MODEL);
-	po->Disable();
-
-	ResetWorldShadowMatrices();
-	DisableCommon(DRAW_WORLD_SHADOW);
+	// todo: -shadow render cleanup
 }
 
 void LuaOpenGL::ResetDrawWorldShadow()
@@ -4085,12 +4070,6 @@ int LuaOpenGL::GetEngineAtlasTextures(lua_State* L) {
 	const std::string atlasName = luaL_checksstring(L, 1).c_str();
 	switch (hashString(atlasName.c_str()))
 	{
-	case hashString("$explosions"): {
-		return pushFunc(projectileDrawer->textureAtlas->GetTextures());
-	} break;
-	case hashString("$groundfx"): {
-		return pushFunc(projectileDrawer->groundFXAtlas->GetTextures());
-	} break;
 	default:
 		luaL_error(L, "[%s] Invalid engine atlas (%s) is specified (only $explosions and $groundfx are supported)", __func__, atlasName.c_str());
 		return 0;
@@ -4994,35 +4973,6 @@ int LuaOpenGL::Finish(lua_State* L)
 
 /******************************************************************************/
 
-static int PixelFormatSize(GLenum f)
-{
-	switch (f) {
-		case GL_COLOR_INDEX:
-		case GL_STENCIL_INDEX:
-		case GL_DEPTH_COMPONENT:
-		case GL_RED:
-		case GL_GREEN:
-		case GL_BLUE:
-		case GL_ALPHA:
-		case GL_LUMINANCE: {
-			return 1;
-		}
-		case GL_LUMINANCE_ALPHA: {
-			return 2;
-		}
-		case GL_RGB:
-		case GL_BGR: {
-			return 3;
-		}
-		case GL_RGBA:
-		case GL_BGRA: {
-			return 4;
-		}
-	}
-	return -1;
-}
-
-
 static void PushPixelData(lua_State* L, int fSize, const float*& data)
 {
 	if (fSize == 1) {
@@ -5051,8 +5001,8 @@ int LuaOpenGL::ReadPixels(lua_State* L)
 		return 0;
 	}
 
-	int fSize = PixelFormatSize(format);
-	if (fSize < 0) {
+	int fSize = GL::GetPixelFormatSize(format);
+	if (!fSize) {
 		fSize = 4; // good enough?
 	}
 
@@ -5287,7 +5237,7 @@ int LuaOpenGL::GetQuery(lua_State* L)
 
 int LuaOpenGL::GetGlobalTexNames(lua_State* L)
 {
-	CondWarnDeprecatedGL(L, __func__);
+	/*CondWarnDeprecatedGL(L, __func__);
 	const auto& textures = textureHandler3DO.GetAtlasTextures();
 
 	lua_createtable(L, textures.size(), 0);
@@ -5296,13 +5246,14 @@ int LuaOpenGL::GetGlobalTexNames(lua_State* L)
 		lua_pushsstring(L, it->first);
 		lua_rawseti(L, -2, count++);
 	}
-	return 1;
+	return 1;*/
+	return 0;
 }
 
 
 int LuaOpenGL::GetGlobalTexCoords(lua_State* L)
 {
-	CondWarnDeprecatedGL(L, __func__);
+	/*CondWarnDeprecatedGL(L, __func__);
 	const C3DOTextureHandler::UnitTexture* texCoords = textureHandler3DO.Get3DOTexture(luaL_checkstring(L, 1));
 
 	if (texCoords == nullptr)
@@ -5312,7 +5263,8 @@ int LuaOpenGL::GetGlobalTexCoords(lua_State* L)
 	lua_pushnumber(L, texCoords->ystart);
 	lua_pushnumber(L, texCoords->xend);
 	lua_pushnumber(L, texCoords->yend);
-	return 4;
+	return 4;*/
+	return 0;
 }
 
 

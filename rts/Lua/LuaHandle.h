@@ -36,8 +36,8 @@ struct LuaHashString;
 struct lua_State;
 class LuaRBOs;
 class LuaFBOs;
-class LuaVBOs;
-class LuaVAOs;
+class LuaXBOs;
+class LuaMeshDrawers;
 class LuaTextures;
 class LuaShaders;
 class CLuaDisplayLists;
@@ -361,8 +361,8 @@ class CLuaHandle : public CEventClient
 		static inline LuaAtlasTextures& GetActiveAtlasTextures(lua_State* L) { return GetLuaContextData(L)->atlasTextures; }
 		static inline LuaFBOs& GetActiveFBOs(lua_State* L) { return GetLuaContextData(L)->fbos; }
 		static inline LuaRBOs& GetActiveRBOs(lua_State* L) { return GetLuaContextData(L)->rbos; }
-		static inline LuaVBOs& GetActiveVBOs(lua_State* L) { return GetLuaContextData(L)->vbos; }
-		static inline LuaVAOs& GetActiveVAOs(lua_State* L) { return GetLuaContextData(L)->vaos; }
+		static inline LuaXBOs& GetActiveXBOs(lua_State* L) { return GetLuaContextData(L)->xbos; }
+		static inline LuaMeshDrawers& GetActiveMeshDrawers(lua_State* L) { return GetLuaContextData(L)->meshDrawers; }
 		static inline CLuaDisplayLists& GetActiveDisplayLists(lua_State* L) { return GetLuaContextData(L)->displayLists; }
 #endif
 

@@ -16,6 +16,7 @@
 #include "LuaSyncedRead.h"
 #include "LuaInterCall.h"
 #include "LuaUnsyncedRead.h"
+#include "LuaNewUnsynced.h"
 #include "LuaUICommand.h"
 #include "LuaFeatureDefs.h"
 #include "LuaUnitDefs.h"
@@ -149,6 +150,7 @@ CLuaUI::CLuaUI()
 	    !AddEntriesToTable(L, "Spring",      LuaSyncedRead::PushEntries)        ||
 	    !AddEntriesToTable(L, "Spring",      LuaUnsyncedCtrl::PushEntries)      ||
 	    !AddEntriesToTable(L, "Spring",      LuaUnsyncedRead::PushEntries)      ||
+	    !AddEntriesToTable(L, "Spring",      LuaNewUnsynced::PushEntries)       ||
 	    !AddEntriesToTable(L, "Spring",      LuaUICommand::PushEntries)         ||
 	    !AddEntriesToTable(L, "gl",          LuaOpenGL::PushEntries)            ||
 	    !AddEntriesToTable(L, "GL",          LuaConstGL::PushEntries)           ||

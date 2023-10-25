@@ -12,6 +12,7 @@
 #include "LuaOpenGL.h"
 #include "LuaBitOps.h"
 #include "LuaMathExtra.h"
+#include "LuaNewMath.h"
 #include "LuaUtils.h"
 #include "LuaZip.h"
 #include "Game/Game.h"
@@ -3650,6 +3651,7 @@ bool CLuaHandle::AddBasicCalls(lua_State* L)
 	lua_getglobal(L, "math");
 	LuaBitOps::PushEntries(L);
 	LuaMathExtra::PushEntries(L);
+	LuaNewMath::PushEntries(L);
 	lua_pop(L, 1);
 
 	return true;

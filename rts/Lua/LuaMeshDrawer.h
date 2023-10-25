@@ -5,12 +5,12 @@
 #include <vector>
 
 struct lua_State;
-class LuaVAOImpl;
+class LuaMeshDrawerImpl;
 
-class LuaVAOs {
+class LuaMeshDrawers {
 public:
-	virtual ~LuaVAOs();
-	static int GetVAO(lua_State* L);
+	virtual ~LuaMeshDrawers();
+	static int GetMeshDrawer(lua_State* L);
 	static bool PushEntries(lua_State* L);
-	std::vector<std::weak_ptr<LuaVAOImpl>> luaVAOs;
+	std::vector<std::weak_ptr<LuaMeshDrawerImpl>> luaMeshDrawers;
 };

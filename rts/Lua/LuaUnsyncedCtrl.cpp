@@ -39,9 +39,7 @@
 #include "Map/MapInfo.h"
 #include "Map/ReadMap.h"
 #include "Map/BaseGroundDrawer.h"
-#include "Map/BaseGroundTextures.h"
 #include "Map/SMF/SMFGroundDrawer.h"
-#include "Map/SMF/ROAM/RoamMeshDrawer.h"
 #include "Net/Protocol/NetProtocol.h"
 #include "Net/GameServer.h"
 #include "Rendering/Env/ISky.h"
@@ -1793,15 +1791,8 @@ int LuaUnsyncedCtrl::SetMapSquareTexture(lua_State* L)
 	const std::string& texName = luaL_checkstring(L, 3);
 
 	CBaseGroundDrawer* groundDrawer = readMap->GetGroundDrawer();
-	CBaseGroundTextures* groundTextures = groundDrawer->GetGroundTextures();
 
-	if (groundTextures == nullptr) {
-		lua_pushboolean(L, false);
-		return 1;
-	}
 	if (texName.empty()) {
-		// restore default texture for this square
-		lua_pushboolean(L, groundTextures->SetSquareLuaTexture(texSquareX, texSquareY, 0));
 		return 1;
 	}
 
@@ -1817,7 +1808,6 @@ int LuaUnsyncedCtrl::SetMapSquareTexture(lua_State* L)
 			return 1;
 		}
 
-		lua_pushboolean(L, groundTextures->SetSquareLuaTexture(texSquareX, texSquareY, luaTexture->id));
 		return 1;
 	}
 
@@ -1828,7 +1818,6 @@ int LuaUnsyncedCtrl::SetMapSquareTexture(lua_State* L)
 			return 1;
 		}
 
-		lua_pushboolean(L, groundTextures->SetSquareLuaTexture(texSquareX, texSquareY, namedTexture->id));
 		return 1;
 	}
 
@@ -1901,11 +1890,12 @@ int LuaUnsyncedCtrl::SetMapShadingTexture(lua_State* L)
  */
 int LuaUnsyncedCtrl::SetSkyBoxTexture(lua_State* L)
 {
-	if (CLuaHandle::GetHandleSynced(L))
+	// todo: skybox cleanup
+	/*if (CLuaHandle::GetHandleSynced(L))
 		return 0;
 
 	if (const auto& sky = ISky::GetSky(); sky != nullptr)
-		sky->SetLuaTexture(ParseLuaTextureData(L, false));
+		sky->SetLuaTexture(ParseLuaTextureData(L, false));*/
 
 	return 0;
 }
@@ -3896,24 +3886,7 @@ int LuaUnsyncedCtrl::SetMapRenderingParams(lua_State* L)
  */
 int LuaUnsyncedCtrl::ForceTesselationUpdate(lua_State* L)
 {
-	CSMFGroundDrawer* smfDrawer = dynamic_cast<CSMFGroundDrawer*>(readMap->GetGroundDrawer());
-
-	if (smfDrawer == nullptr) {
-		lua_pushboolean(L, false);
-		return 1;
-	}
-
-	CRoamMeshDrawer* roamMeshDrawer = dynamic_cast<CRoamMeshDrawer*>(smfDrawer->GetMeshDrawer());
-	if (roamMeshDrawer == nullptr) {
-		lua_pushboolean(L, false);
-		return 1;
-	}
-
-	CRoamMeshDrawer::ForceNextTesselation(
-		luaL_optboolean(L, 1, true ),
-		luaL_optboolean(L, 2, false)
-	);
-
+	// todo: ROAM cleanup
 	lua_pushboolean(L, true);
 	return 1;
 }
@@ -4425,10 +4398,6 @@ int LuaUnsyncedCtrl::LoadModelTextures(lua_State* L)
 
 	for (S3DModel& model : modelLoader.GetModelsVec()) {
 		if (model.name == modelName) {
-			if (model.type == MODELTYPE_3DO) {
-				lua_pushboolean(L, false);
-				return 1;
-			}
 			textureHandlerS3O.LoadTexture(&model);
 			lua_pushboolean(L, true);
 			return 1;

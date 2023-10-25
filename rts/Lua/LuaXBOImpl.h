@@ -1,7 +1,6 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
-#ifndef LUA_VBO_IMPL_H
-#define LUA_VBO_IMPL_H
+#pragma once
 
 #include <map>
 #include <vector>
@@ -12,19 +11,19 @@
 #include "lib/sol2/forward.hpp"
 
 #include "Rendering/GL/myGL.h"
+#include "Rendering/GL/XBO.h"
 #include "Rendering/Models/3DModelVAO.h"
 
-class VBO;
-class LuaVAOImpl;
+class LuaMeshDrawerImpl;
 
-class LuaVBOImpl {
+class LuaXBOImpl {
 public:
-	LuaVBOImpl() = delete;
-	LuaVBOImpl(const sol::optional<GLenum> defTargetOpt, const sol::optional<bool> freqUpdatedOpt);
-	LuaVBOImpl(const LuaVBOImpl&) = delete;
-	LuaVBOImpl(LuaVBOImpl&&) = default;
+	LuaXBOImpl(const sol::optional<GLenum> defTarget, const sol::optional<GLenum> usageHint);
 
-	~LuaVBOImpl();
+	LuaXBOImpl(const LuaXBOImpl&) = delete;
+	LuaXBOImpl(LuaXBOImpl&&) = default;
+
+	~LuaXBOImpl();
 	void Delete();
 
 	void Define(const int elementsCount, const sol::optional<sol::object> attribDefArgOpt);
@@ -34,7 +33,7 @@ public:
 	sol::as_table_t<std::vector<lua_Number>> Download(sol::optional<int> attribIdxOpt, sol::optional<int> elemOffsetOpt, sol::optional<int> elemCountOpt, sol::optional<bool> forceGPUReadOpt);
 	void Clear();
 
-	size_t ModelsVBO();
+	size_t ModelsXBO();
 
 	size_t InstanceDataFromUnitDefIDs(int id, int attrID, sol::optional<int> teamIdOpt, sol::optional<int> elemOffsetOpt);
 	size_t InstanceDataFromUnitDefIDs(const sol::stack_table& ids, int attrID, sol::optional<int> teamIdOpt, sol::optional<int> elemOffsetOpt);
@@ -54,6 +53,25 @@ public:
 	void DumpDefinition();
 public:
 	static bool Supported(GLenum target);
+
+	inline XBO* GetXBO() const { return xbo; }
+	inline size_t GetAttributeCount() const { return (size_t)attributesCount; }
+
+private:
+	// performed by MeshDrawer, leaves information; information is used to generate intuitive `defaults`, such as meshDrawer:Draw(`count`)
+	inline void MemorizedUpload(size_t destStartPos, size_t destEndPos, const void* data)
+	{
+		assert(destStartPos <= destEndPos);
+
+		XBO* const xbo = GetXBO();
+		xbo->Bind();
+		xbo->SetBufferSubData(destStartPos, destEndPos-destStartPos, data);
+		xbo->Unbind();
+
+		lastMemorizedUploadEndPosition = destEndPos;
+	}
+	inline size_t GetLastMemorizedUploadEndPosition() const { return lastMemorizedUploadEndPosition; }
+
 private:
 	void AllocGLBuffer(size_t byteSize);
 	void CopyAttrMapToVec();
@@ -68,10 +86,10 @@ private:
 	bool FillAttribsNumberImpl(const int numVec4Attribs);
 	bool DefineElementArray(const sol::optional<sol::object> attribDefArgOpt);
 private:
-	uint32_t GetId() const { return vbo->GetIdRaw(); }
+	uint32_t GetId() const { return xbo->GetIdRaw(); }
 
-	void UpdateModelsVBOElementCount();
-	size_t ModelsVBOImpl();
+	void UpdateModelsXBOElementCount();
+	size_t ModelsXBOImpl();
 
 	inline void InstanceBufferCheck(int attrID, const char* func);
 	inline void InstanceBufferCheckAndFormatCheck(int attrID, const char* func);
@@ -114,7 +132,7 @@ private:
 	template<typename TIn>
 	bool TransformAndRead(int& bytesRead, GLubyte*& mappedBuf, const int mappedBufferSizeInBytes, const int size, std::vector<lua_Number>& vec, const bool copyData);
 private:
-	friend class LuaVAOImpl;
+	friend class LuaMeshDrawerImpl;
 private:
 	struct BufferAttribDef {
 		GLenum type;
@@ -128,7 +146,7 @@ private:
 	};
 private:
 	GLenum defTarget;
-	bool freqUpdated;
+	GLenum usageHint;
 
 	uint32_t attributesCount;
 
@@ -136,8 +154,8 @@ private:
 	uint32_t elemSizeInBytes;
 	uint32_t bufferSizeInBytes;
 
-	VBO* vbo = nullptr;
-	bool vboOwner;
+	XBO* xbo = nullptr;
+	bool xboOwner;
 
 	void* bufferData;
 
@@ -145,6 +163,12 @@ private:
 
 	std::vector<std::pair<const int, const BufferAttribDef>> bufferAttribDefsVec;
 	std::map<const int, BufferAttribDef> bufferAttribDefs;
+
+	//!temp?
+	GLenum iboIndexType;
+
+	size_t lastMemorizedUploadEndPosition = 0;
+
 private:
 	static constexpr uint32_t uboMinIndex = 5 + 1; // glBindBufferBase(GL_UNIFORM_BUFFER, 5, uboGroundLighting.GetId()); //DecalsDrawerGL4
 	static constexpr uint32_t ssboMinIndex = 3 + 1; // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, uboDecalsStructures.GetId()); //DecalsDrawerGL4
@@ -156,7 +180,3 @@ private:
 	static constexpr GLenum DEFAULT_BUFF_ATTR_TYPE = GL_FLOAT_VEC4;
 	static constexpr GLenum DEFAULT_INDX_ATTR_TYPE = GL_UNSIGNED_SHORT;
 };
-
-
-
-#endif //LUA_VBO_IMPL_H
