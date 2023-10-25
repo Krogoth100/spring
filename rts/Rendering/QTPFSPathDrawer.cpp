@@ -5,7 +5,6 @@
 
 #include "Game/Camera.h"
 #include "Game/GlobalUnsynced.h"
-#include "Game/UI/MiniMap.h"
 #include "Map/Ground.h"
 #include "Map/ReadMap.h"
 #include "Sim/Misc/GlobalSynced.h"
@@ -413,58 +412,4 @@ void QTPFSPathDrawer::UpdateExtraTexture(int extraTex, int starty, int endy, int
 #else
 void QTPFSPathDrawer::UpdateExtraTexture(int extraTex, int starty, int endy, int offset, unsigned char* texMem) const {}
 #endif
-
-void QTPFSPathDrawer::DrawInMiniMap()
-{
-	auto mdt = pm->GetMapDamageTrack();
-
-	if (!IsEnabled() || (!gs->cheatEnabled && !gu->spectatingFullView))
-		return;
-
-	glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0.0f, 1.0f, 0.0f, 1.0f, 0.0, -1.0);
-		minimap->ApplyConstraintsMatrix();
-	glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-		glTranslatef3(UpVector);
-		glScalef(1.0f / mapDims.mapx, -1.0f / mapDims.mapy, 1.0f);
-
-	glDisable(GL_TEXTURE_2D);
-
-	const int blockSize = QTPFS::PathManager::DAMAGE_MAP_BLOCK_SIZE;
-
-	auto width = mdt.width;
-	auto height = mdt.height;
-	float maxStrength = mdt.mapChangeTrackers.size();
-
-	std::vector<float> mapDamageStrength;
-	mapDamageStrength.resize(width*height, 0.f);
-
-	for (auto& track : mdt.mapChangeTrackers) {
-		for (auto mapQuad: track.damageQueue) {
-			assert(mapQuad < mapDamageStrength.size());
-			mapDamageStrength[mapQuad]++;
-		}
-	}
-
-	for (int i = 0; i < mapDamageStrength.size(); ++i) {
-		if (mapDamageStrength[i] == 0.f) { continue; }
-		const int blockIdxX = (i % width) * blockSize;
-		const int blockIdxY = (i / width) * blockSize;
-		const float drawStrength = 0.2f + 0.55f*(mapDamageStrength[i] / maxStrength);
-		glColor4f(1.0f, 1.0f, 0.0f, drawStrength);
-		glRectf(blockIdxX, blockIdxY, blockIdxX + blockSize, blockIdxY + blockSize);
-	}
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glEnable(GL_TEXTURE_2D);
-
-	glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-}
 

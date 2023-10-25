@@ -28,10 +28,9 @@ static constexpr float3 DEF_MIN_SIZE( 10000.0f,  10000.0f,  10000.0f);
 static constexpr float3 DEF_MAX_SIZE(-10000.0f, -10000.0f, -10000.0f);
 
 enum ModelType {
-	MODELTYPE_3DO    = 0,
-	MODELTYPE_S3O    = 1,
-	MODELTYPE_ASS    = 2, // Assimp
-	MODELTYPE_CNT    = 3  // count
+	MODELTYPE_S3O    = 0,
+	MODELTYPE_ASS    = 1, // Assimp
+	MODELTYPE_CNT    = 2  // count
 };
 
 struct CollisionVolume;

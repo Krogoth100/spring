@@ -16,7 +16,6 @@
 #include "Rendering/Env/ISky.h"
 #include "Rendering/Shaders/ShaderHandler.h"
 #include "Rendering/Shaders/Shader.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
 
 namespace GL { struct GeometryBuffer; }
@@ -355,7 +354,7 @@ inline void CModelDrawerBase<TDrawerData, TDrawer>::DrawOpaquePassImpl(bool defe
 
 	SetupOpaqueDrawing(deferredPass);
 
-	for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; ++modelType) {
+	for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; ++modelType) {
 		if (modelDrawerData->GetModelRenderer(modelType).empty())
 			continue;
 
@@ -384,7 +383,7 @@ inline void CModelDrawerBase<TDrawerData, TDrawer>::DrawAlphaPassImpl(bool drawR
 
 	SetupAlphaDrawing(false);
 
-	for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; ++modelType) {
+	for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; ++modelType) {
 		if (modelDrawerData->GetModelRenderer(modelType).empty())
 			continue;
 
@@ -420,32 +419,6 @@ inline void CModelDrawerBase<TDrawerData, TDrawer>::DrawShadowPassImpl() const
 
 		glAlphaFunc(GL_GREATER, 0.5f);
 		glEnable(GL_ALPHA_TEST);
-	}
-
-	CShadowHandler::ShadowGenProgram shadowGenProgram;
-	if constexpr (legacy)
-		shadowGenProgram = CShadowHandler::SHADOWGEN_PROGRAM_MODEL;
-	else
-		shadowGenProgram = CShadowHandler::SHADOWGEN_PROGRAM_MODEL_GL4;
-
-	Shader::IProgramObject* po = shadowHandler.GetShadowGenProg(shadowGenProgram);
-	if (po && po->IsValid()) {
-		po->Enable();
-
-		// 3DO's have clockwise-wound faces and
-		// (usually) holes, so disable backface
-		// culling for them
-		// glDisable(GL_CULL_FACE); Draw(); glEnable(GL_CULL_FACE);
-		for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; ++modelType) {
-			if (modelDrawerData->GetModelRenderer(modelType).empty())
-				continue;
-
-			CModelDrawerHelper::PushModelRenderState(modelType);
-			DrawObjectsShadow(modelType);
-			CModelDrawerHelper::PopModelRenderState(modelType);
-		}
-
-		po->Disable();
 	}
 
 	DrawShadowObjectsLua();

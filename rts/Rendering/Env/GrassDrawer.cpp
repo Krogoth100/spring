@@ -12,7 +12,6 @@
 #include "Rendering/ShadowHandler.h"
 #include "Rendering/Env/ISky.h"
 #include "Rendering/Env/SunLighting.h"
-#include "Rendering/Env/CubeMapHandler.h"
 #include "Rendering/GL/myGL.h"
 #include "Rendering/GL/FBO.h"
 #include "Rendering/Map/InfoTexture/IInfoTextureHandler.h"
@@ -634,24 +633,13 @@ void CGrassDrawer::SetupGlStateNear()
 			glBindTexture(GL_TEXTURE_2D, readMap->GetShadingTexture());
 		glActiveTextureARB(GL_TEXTURE3_ARB);
 			glBindTexture(GL_TEXTURE_2D, infoTextureHandler->GetCurrentInfoTexture());
-		glActiveTextureARB(GL_TEXTURE5_ARB);
-			glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubeMapHandler.GetSpecularTextureID());
+		// todo: cleanup cubemap removal
+		//glActiveTextureARB(GL_TEXTURE5_ARB);
+			//glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubeMapHandler.GetSpecularTextureID());
 	}
 
 	// bind shader
 	EnableShader(GRASS_PROGRAM_NEAR);
-
-	if (shadowHandler.ShadowsLoaded()) {
-		shadowHandler.SetupShadowTexSampler(GL_TEXTURE4);
-		glActiveTexture(GL_TEXTURE6); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
-	}
-
-	glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glMultMatrixf(camera->GetViewMatrix());
-	glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
 
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 	glDisable(GL_BLEND);
@@ -664,22 +652,7 @@ void CGrassDrawer::SetupGlStateNear()
 
 void CGrassDrawer::ResetGlStateNear()
 {
-	//CBaseGroundDrawer* gd = readMap->GetGroundDrawer();
-
 	grassShader->Disable();
-
-	if (shadowHandler.ShadowsLoaded()) {
-		glActiveTextureARB(GL_TEXTURE1_ARB);
-			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
-			glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE_ARB, GL_LUMINANCE);
-		glActiveTextureARB(GL_TEXTURE0_ARB);
-	}
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
 
 	glDisable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
@@ -711,11 +684,6 @@ void CGrassDrawer::SetupGlStateFar()
 		glBindTexture(GL_TEXTURE_2D, readMap->GetShadingTexture());
 	glActiveTextureARB(GL_TEXTURE3_ARB);
 		glBindTexture(GL_TEXTURE_2D, infoTextureHandler->GetCurrentInfoTexture());
-
-	if (shadowHandler.ShadowsLoaded()) {
-		shadowHandler.SetupShadowTexSampler(GL_TEXTURE4);
-		glActiveTexture(GL_TEXTURE6); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
-	}
 
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 }

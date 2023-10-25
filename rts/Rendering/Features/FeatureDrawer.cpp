@@ -20,7 +20,6 @@
 #include "Rendering/Shaders/Shader.h"
 #include "Rendering/Common/ModelDrawerHelpers.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Models/3DModelVAO.h"
 #include "Rendering/Models/ModelsMemStorage.h"
 #include "Sim/Features/Feature.h"
@@ -194,9 +193,6 @@ void CFeatureDrawerLegacy::DrawObjectsShadow(int modelType) const
 	for (uint32_t i = 0, n = mdlRenderer.GetNumObjectBins(); i < n; i++) {
 		if (mdlRenderer.GetObjectBin(i).empty())
 			continue;
-
-		// only need to bind the atlas once for 3DO's, but KISS
-		assert((modelType != MODELTYPE_3DO) || (mdlRenderer.GetObjectBinKey(i) == 0));
 
 		//shadowTexBindFuncs[modelType](textureHandlerS3O.GetTexture(mdlRenderer.GetObjectBinKey(i)));
 		const auto* texMat = textureHandlerS3O.GetTexture(mdlRenderer.GetObjectBinKey(i));

@@ -3,7 +3,6 @@
 #include "Map/Ground.h"
 #include "Rendering/GL/LightHandler.h"
 #include "System/Config/ConfigHandler.h"
-#include "Rendering/Env/CubeMapHandler.h"
 #include "Rendering/LuaObjectDrawer.h"
 
 void CModelDrawerConcept::InitStatic()
@@ -11,7 +10,7 @@ void CModelDrawerConcept::InitStatic()
 	if (initialized)
 		return;
 
-	advShading = configHandler->GetBool("AdvUnitShading") && cubeMapHandler.Init();
+	advShading = configHandler->GetBool("AdvUnitShading");
 	wireFrameMode = false;
 
 	lightHandler.Init(2U, configHandler->GetInt("MaxDynamicModelLights"));
@@ -33,7 +32,6 @@ void CModelDrawerConcept::KillStatic(bool reload)
 	if (!initialized)
 		return;
 
-	cubeMapHandler.Free();
 	geomBuffer = nullptr;
 
 	for (int t = ModelDrawerTypes::MODEL_DRAWER_GLSL; t < ModelDrawerTypes::MODEL_DRAWER_CNT; ++t) {

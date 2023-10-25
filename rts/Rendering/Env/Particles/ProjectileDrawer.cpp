@@ -676,7 +676,7 @@ void CProjectileDrawer::DrawProjectileShadow(CProjectile* p)
 
 void CProjectileDrawer::DrawProjectilesMiniMap()
 {
-	for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+	for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 		const auto& mdlRenderer = modelRenderers[modelType];
 		// const auto& projBinKeys = mdlRenderer.GetObjectBinKeys();
 
@@ -766,7 +766,7 @@ void CProjectileDrawer::Draw(bool drawReflection, bool drawRefraction) {
 			ScopedModelDrawerImpl<CUnitDrawer> legacy(true, false);
 			unitDrawer->SetupOpaqueDrawing(false);
 
-			for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
+			for (int modelType = MODELTYPE_S3O; modelType < MODELTYPE_CNT; modelType++) {
 				CModelDrawerHelper::PushModelRenderState(modelType);
 				DrawProjectiles(modelType, drawReflection, drawRefraction);
 				CModelDrawerHelper::PopModelRenderState(modelType);
@@ -848,20 +848,7 @@ void CProjectileDrawer::Draw(bool drawReflection, bool drawRefraction) {
 
 void CProjectileDrawer::DrawShadowPassOpaque()
 {
-	Shader::IProgramObject* po = shadowHandler.GetShadowGenProg(CShadowHandler::SHADOWGEN_PROGRAM_PROJECTILE);
-
-	glPushAttrib(GL_ENABLE_BIT);
-	glDisable(GL_TEXTURE_2D);
-	po->Enable();
-	{
-		for (int modelType = MODELTYPE_3DO; modelType < MODELTYPE_CNT; modelType++) {
-			DrawProjectilesShadow(modelType);
-		}
-	}
-	po->Disable();
-
-	//glShadeModel(GL_FLAT);
-	glPopAttrib();
+	// todo: -shadow render cleanup
 }
 
 void CProjectileDrawer::DrawShadowPassTransparent()
@@ -878,7 +865,7 @@ void CProjectileDrawer::DrawShadowPassTransparent()
 		return;
 
 	// 2) Bind render target for shadow color filter: R11G11B10 works good
-	shadowHandler.EnableColorOutput(true);
+	//shadowHandler.EnableColorOutput(true);
 
 	// 3) Clear render target to 1,1,1,0 (RGBA) color - done elsewhere
 

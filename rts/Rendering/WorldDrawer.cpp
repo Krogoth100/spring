@@ -6,7 +6,6 @@
 #include "Sim/Units/UnitDefHandler.h"
 #include "Sim/Features/FeatureDefHandler.h"
 #include "Sim/Weapons/WeaponDefHandler.h"
-#include "Rendering/Env/CubeMapHandler.h"
 #include "Rendering/Env/GrassDrawer.h"
 #include "Rendering/Env/IGroundDecalDrawer.h"
 #include "Rendering/Env/ISky.h"
@@ -31,9 +30,7 @@
 #include "Rendering/Models/ModelsLock.h"
 #include "Rendering/Shaders/ShaderHandler.h"
 #include "Rendering/Textures/ColorMap.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
-#include "Map/BaseGroundDrawer.h"
 #include "Map/HeightMapTexture.h"
 #include "Map/ReadMap.h"
 #include "Game/Camera.h"
@@ -65,7 +62,6 @@ void CWorldDrawer::InitPre() const
 	modelLoader.Init();
 
 	loadscreen->SetLoadMessage("Creating Unit Textures");
-	textureHandler3DO.Init();
 	textureHandlerS3O.Init();
 
 	loadscreen->SetLoadMessage("Creating Sky");
@@ -177,11 +173,10 @@ void CWorldDrawer::Kill()
 	ISky::KillSky();
 	spring::SafeDelete(grassDrawer);
 	spring::SafeDelete(pathDrawer);
-	shadowHandler.Kill();
 	spring::SafeDelete(inMapDrawerView);
 
 	CFeatureDrawer::KillStatic(gu->globalReload);
-	CUnitDrawer::KillStatic(gu->globalReload); // depends on unitHandler, cubeMapHandler
+	CUnitDrawer::KillStatic(gu->globalReload); // depends on unitHandler
 	CProjectileDrawer::KillStatic(gu->globalReload);
 
 	S3DModelVAO::Kill();
@@ -189,7 +184,6 @@ void CWorldDrawer::Kill()
 
 	spring::SafeDelete(heightMapTexture);
 
-	textureHandler3DO.Kill();
 	textureHandlerS3O.Kill();
 
 	readMap->KillGroundDrawer();
@@ -209,9 +203,6 @@ void CWorldDrawer::Update(bool newSimFrame)
 	LuaObjectDrawer::Update(numUpdates == 0);
 	readMap->UpdateDraw(numUpdates == 0);
 
-	if (globalRendering->drawGround)
-		(readMap->GetGroundDrawer())->Update();
-
 	// XXX: done in CGame, needs to get updated even when !doDrawWorld
 	// (it updates unitdrawpos which is used for maximized minimap too)
 	// unitDrawer->Update();
@@ -220,8 +211,6 @@ void CWorldDrawer::Update(bool newSimFrame)
 	CFeatureDrawer::UpdateStatic();
 
 	if (newSimFrame) {
-		projectileDrawer->UpdateTextures();
-
 		{
 			SCOPED_TIMER("Update::WorldDrawer::{Sky,Water}");
 
@@ -241,35 +230,6 @@ void CWorldDrawer::Update(bool newSimFrame)
 
 void CWorldDrawer::GenerateIBLTextures() const
 {
-
-	if (shadowHandler.ShadowsLoaded()) {
-		SCOPED_TIMER("Draw::World::CreateShadows");
-
-		game->SetDrawMode(CGame::gameShadowDraw);
-		shadowHandler.CreateShadows();
-		game->SetDrawMode(CGame::gameNormalDraw);
-	}
-
-	{
-		SCOPED_TIMER("Draw::World::UpdateReflTex");
-		cubeMapHandler.UpdateReflectionTexture();
-	}
-
-	if (ISky::GetSky()->GetLight()->Update()) {
-		{
-			SCOPED_TIMER("Draw::World::UpdateSpecTex");
-			cubeMapHandler.UpdateSpecularTexture();
-		}
-		{
-			SCOPED_TIMER("Draw::World::UpdateSkyTex");
-			ISky::GetSky()->UpdateSkyTexture();
-		}
-	}
-	{
-		SCOPED_TIMER("Draw::World::UpdateShadingTex");
-		readMap->UpdateShadingTexture();
-	}
-
 	if (FBO::IsSupported())
 		FBO::Unbind();
 
@@ -296,8 +256,7 @@ void CWorldDrawer::Draw() const
 {
 	SCOPED_TIMER("Draw::World");
 
-	const auto& sky = ISky::GetSky();
-	glClearColor(sky->fogColor.x, sky->fogColor.y, sky->fogColor.z, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glDepthMask(GL_TRUE);
@@ -308,15 +267,7 @@ void CWorldDrawer::Draw() const
 	camera->Update();
 
 	DrawOpaqueObjects();
-	ISky::GetSky()->Draw();
 	DrawAlphaObjects();
-
-	{
-		SCOPED_TIMER("Draw::World::Projectiles");
-		projectileDrawer->Draw(false);
-	}
-
-	ISky::GetSky()->DrawSun();
 
 	{
 		SCOPED_TIMER("Draw::World::DrawWorld");
@@ -325,25 +276,16 @@ void CWorldDrawer::Draw() const
 
 	DrawMiscObjects();
 	DrawBelowWaterOverlay();
-
-	glDisable(GL_FOG);
 }
 
 
 void CWorldDrawer::DrawOpaqueObjects() const
 {
-	CBaseGroundDrawer* gd = readMap->GetGroundDrawer();
-
 	if (globalRendering->drawGround) {
-		{
-			SCOPED_TIMER("Draw::World::Terrain");
-			gd->Draw(DrawPass::Normal);
-		}
 		{
 			eventHandler.DrawPreDecals();
 			SCOPED_TIMER("Draw::World::Decals");
 			groundDecals->Draw();
-			projectileDrawer->DrawGroundFlashes();
 		}
 		{
 			SCOPED_TIMER("Draw::World::Foliage");
@@ -355,11 +297,6 @@ void CWorldDrawer::DrawOpaqueObjects() const
 	selectedUnitsHandler.Draw();
 	eventHandler.DrawWorldPreUnit();
 
-	{
-		SCOPED_TIMER("Draw::World::Models::Opaque");
-		unitDrawer->Draw(false);
-		featureDrawer->Draw(false);
-	}
 	{
 		SCOPED_TIMER("Draw::OpaqueObjects::Debug");
 		DebugColVolDrawer::Draw();
@@ -377,22 +314,6 @@ void CWorldDrawer::DrawAlphaObjects() const
 	static const double belowPlaneEq[4] = {0.0f, -1.0f, 0.0f, 0.0f};
 	static const double abovePlaneEq[4] = {0.0f,  1.0f, 0.0f, 0.0f};
 
-	{
-		SCOPED_TIMER("Draw::World::Models::Alpha");
-		// clip in model-space
-		glPushMatrix();
-		glLoadIdentity();
-		glClipPlane(GL_CLIP_PLANE3, belowPlaneEq);
-		glPopMatrix();
-		glEnable(GL_CLIP_PLANE3);
-
-		// draw alpha-objects below water surface (farthest)
-		unitDrawer->DrawAlphaPass(false);
-		featureDrawer->DrawAlphaPass(false);
-
-		glDisable(GL_CLIP_PLANE3);
-	}
-
 	// draw water (in-between)
 	if (globalRendering->drawWater && !mapRendering->voidWater) {
 		SCOPED_TIMER("Draw::World::Water");
@@ -401,21 +322,6 @@ void CWorldDrawer::DrawAlphaObjects() const
 		water->UpdateWater(game);
 		water->Draw();
 		eventHandler.DrawWaterPost();
-	}
-
-	{
-		SCOPED_TIMER("Draw::World::Models::Alpha");
-		glPushMatrix();
-		glLoadIdentity();
-		glClipPlane(GL_CLIP_PLANE3, abovePlaneEq);
-		glPopMatrix();
-		glEnable(GL_CLIP_PLANE3);
-
-		// draw alpha-objects above water surface (closest)
-		unitDrawer->DrawAlphaPass(false);
-		featureDrawer->DrawAlphaPass(false);
-
-		glDisable(GL_CLIP_PLANE3);
 	}
 }
 
@@ -430,12 +336,6 @@ void CWorldDrawer::DrawMiscObjects() const
 			selectedUnitsHandler.DrawCommands();
 		}
 	}
-
-	// either draw from here, or make {Dyn,Bump}Water use blending
-	// pro: icons are drawn only once per frame, not every pass
-	// con: looks somewhat worse for underwater / obscured icons
-	if (!CUnitDrawer::UseScreenIcons())
-		unitDrawer->DrawUnitIcons();
 
 	lineDrawer.DrawAll();
 	cursorIcons.Draw();

@@ -7,8 +7,6 @@
 #include "Sim/Misc/Team.h"
 #include "Sim/Objects/SolidObject.h"
 #include "Rendering/ShadowHandler.h"
-#include "Rendering/Textures/3DOTextureHandler.h"
-#include "Rendering/Env/CubeMapHandler.h"
 
 bool CModelDrawerHelper::ObjectVisibleReflection(const float3& objPos, const float3& camPos, float maxRadius)
 {
@@ -39,19 +37,15 @@ void CModelDrawerHelper::EnableTexturesCommon()
 	glActiveTexture(GL_TEXTURE1);
 	glEnable(GL_TEXTURE_2D);
 
-	if (shadowHandler.ShadowsLoaded()) {
-		shadowHandler.SetupShadowTexSampler(GL_TEXTURE2, true);
-		glActiveTexture(GL_TEXTURE3); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
-	}
-
 	if (CModelDrawerConcept::UseAdvShading()) {
-		glActiveTexture(GL_TEXTURE4);
+		// todo: cleanup cubemap removal
+		/*glActiveTexture(GL_TEXTURE4);
 		glEnable(GL_TEXTURE_CUBE_MAP);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapHandler.GetEnvReflectionTextureID());
 
 		glActiveTexture(GL_TEXTURE5);
 		glEnable(GL_TEXTURE_CUBE_MAP);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapHandler.GetSpecularTextureID());
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapHandler.GetSpecularTextureID());*/
 	}
 
 	glActiveTexture(GL_TEXTURE0);
@@ -62,9 +56,6 @@ void CModelDrawerHelper::DisableTexturesCommon()
 {
 	glActiveTexture(GL_TEXTURE1);
 	glDisable(GL_TEXTURE_2D);
-
-	if (shadowHandler.ShadowsLoaded())
-		shadowHandler.ResetShadowTexSampler(GL_TEXTURE2, true);
 
 	if (CModelDrawerConcept::UseAdvShading()) {
 		glActiveTexture(GL_TEXTURE3);
@@ -180,52 +171,9 @@ void CModelDrawerHelper::PopModelRenderState(const CSolidObject* o) { PopModelRe
 ///////////////////////////////////////////////////////////////////////////
 
 const std::array<const CModelDrawerHelper*, MODELTYPE_CNT> CModelDrawerHelper::modelDrawerHelpers = {
-	CModelDrawerHelper::GetInstance<CModelDrawerHelper3DO>(),
 	CModelDrawerHelper::GetInstance<CModelDrawerHelperS3O>(),
 	CModelDrawerHelper::GetInstance<CModelDrawerHelperASS>(),
 };
-
-///////////////////////////////////////////////////////////////////////////
-
-void CModelDrawerHelper3DO::PushRenderState() const
-{
-	glDisable(GL_CULL_FACE);
-}
-
-void CModelDrawerHelper3DO::PopRenderState() const
-{
-	glEnable(GL_CULL_FACE);
-}
-
-void CModelDrawerHelper3DO::BindOpaqueTex(const CS3OTextureHandler::S3OTexMat* textureMat) const
-{
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex2ID());
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex1ID());
-}
-
-void CModelDrawerHelper3DO::UnbindOpaqueTex() const
-{
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void CModelDrawerHelper3DO::BindShadowTex(const CS3OTextureHandler::S3OTexMat* textureMat) const
-{
-	glActiveTexture(GL_TEXTURE0);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, textureHandler3DO.GetAtlasTex2ID());
-}
-
-void CModelDrawerHelper3DO::UnbindShadowTex() const
-{
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0);
-}
 
 ///////////////////////////////////////////////////////////////////////////
 

@@ -928,13 +928,6 @@ void CBumpWater::Draw()
 	waterShader->SetUniform("eyePos", camera->GetPos().x, camera->GetPos().y, camera->GetPos().z);
 	waterShader->SetUniform("frame", (gs->frameNum + globalRendering->timeOffset) / 15000.0f);
 
-	if (shadowHandler.ShadowsLoaded()) {
-		waterShader->SetUniformMatrix4x4("shadowMatrix", false, shadowHandler.GetShadowMatrixRaw());
-
-		shadowHandler.SetupShadowTexSampler(GL_TEXTURE9);
-		glActiveTexture(GL_TEXTURE11); glBindTexture(GL_TEXTURE_2D, shadowHandler.GetColorTextureID());
-	}
-
 	const int causticTexNum = (gs->frameNum % caustTextures.size());
 	glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, readMap->GetShadingTexture());
 	glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, caustTextures[causticTexNum]);

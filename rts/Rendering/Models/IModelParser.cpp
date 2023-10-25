@@ -4,7 +4,6 @@
 #include <string_view>
 
 #include "IModelParser.h"
-#include "3DOParser.h"
 #include "S3OParser.h"
 #include "AssParser.h"
 #include "3DModelVAO.h"
@@ -28,7 +27,6 @@
 
 CModelLoader modelLoader;
 
-static C3DOParser g3DOParser;
 static CS3OParser gS3OParser;
 static CAssParser gAssParser;
 
@@ -50,7 +48,6 @@ static bool CheckAssimpWhitelist(const char* aiExt) {
 
 static void RegisterModelFormats(CModelLoader::ParsersType& parsers) {
 	// file-extension should be lowercase
-	parsers.emplace_back("3do", &g3DOParser);
 	parsers.emplace_back("s3o", &gS3OParser);
 
 	std::string extension;
@@ -89,10 +86,10 @@ static void RegisterModelFormats(CModelLoader::ParsersType& parsers) {
 static void LoadDummyModel(S3DModel& model)
 {
 	// create a crash-dummy
-	model.type = MODELTYPE_3DO;
+	model.type = MODELTYPE_S3O;
 	model.numPieces = 1;
 	// give it one empty piece
-	model.AddPiece(g3DOParser.AllocPiece());
+	model.AddPiece(gS3OParser.AllocPiece());
 	model.FlattenPieceTree(model.GetRootPiece()); //useless except for setting up matAlloc
 	model.GetRootPiece()->SetCollisionVolume(CollisionVolume('b', 'z', -UpVector, ZeroVector));
 	model.loadStatus = S3DModel::LoadStatus::LOADED;
@@ -149,7 +146,6 @@ void CModelLoader::Init()
 
 void CModelLoader::InitParsers() const
 {
-	g3DOParser.Init();
 	gS3OParser.Init();
 	gAssParser.Init();
 }
@@ -172,7 +168,6 @@ void CModelLoader::KillModels()
 
 void CModelLoader::KillParsers() const
 {
-	g3DOParser.Kill();
 	gS3OParser.Kill();
 	gAssParser.Kill();
 }
@@ -451,11 +446,8 @@ void CModelLoader::Upload(S3DModel* model) const {
 		auto lock = CLoadLock::GetUniqueLock(); //mostly needed to support calls from CFeatureHandler::LoadFeaturesFromMap()
 		S3DModelVAO::GetInstance().UploadVBOs();
 
-		// 3DO atlases are preloaded C3DOTextureHandler::Init()
-		if (model->type != MODELTYPE_3DO) {
-			// make sure textures (already preloaded) are fully loaded
-			textureHandlerS3O.LoadTexture(model);
-		}
+		// make sure textures (already preloaded) are fully loaded
+		textureHandlerS3O.LoadTexture(model);
 	}
 
 	for (auto* p : model->pieceObjects) {
@@ -463,9 +455,7 @@ void CModelLoader::Upload(S3DModel* model) const {
 	}
 
 	// warn about models with bad normals (they break lighting)
-	// skip for 3DO's since those have auto-calculated normals
-	if (model->type != MODELTYPE_3DO)
-		CheckPieceNormals(model, model->GetRootPiece());
+	CheckPieceNormals(model, model->GetRootPiece());
 
 	model->uploaded = true;
 }
