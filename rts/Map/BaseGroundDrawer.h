@@ -6,7 +6,6 @@
 #include "MapDrawPassTypes.h"
 
 
-class CBaseGroundTextures;
 class CCamera;
 
 namespace GL {
@@ -42,8 +41,6 @@ public:
 	virtual void SetDrawForwardPass(bool b) { drawForward = b; }
 	virtual void SetDrawDeferredPass(bool) {}
 
-	virtual bool ToggleMapBorder() { drawMapEdges = !drawMapEdges; return drawMapEdges; }
-
 	virtual const GL::LightHandler* GetLightHandler() const { return nullptr; }
 	virtual       GL::LightHandler* GetLightHandler()       { return nullptr; }
 	virtual const GL::GeometryBuffer* GetGeometryBuffer() const { return nullptr; }
@@ -57,8 +54,6 @@ public:
 
 	bool& UseAdvShadingRef() { return advShading; }
 	bool& WireFrameModeRef() { return wireframe; }
-
-	CBaseGroundTextures* GetGroundTextures() { return groundTextures; }
 
 public:
 	float LODScaleReflection;
@@ -77,11 +72,8 @@ public:
 	static const int losColorScale = 10000;
 
 protected:
-	CBaseGroundTextures* groundTextures;
-
 	bool drawForward;
 	bool drawDeferred;
-	bool drawMapEdges;
 	bool postDeferredEvents;
 	bool deferredEvents;
 

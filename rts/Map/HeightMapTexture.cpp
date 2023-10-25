@@ -71,7 +71,8 @@ void HeightMapTexture::Kill()
 
 void HeightMapTexture::UnsyncedHeightMapUpdate(const SRectangle& rect)
 {
-	if (texID == 0)
+	// temp
+	/*if (texID == 0)
 		return;
 
 	SCOPED_TIMER("Update::HeightMapTexture");
@@ -108,5 +109,5 @@ void HeightMapTexture::UnsyncedHeightMapUpdate(const SRectangle& rect)
 	glTexSubImage2D(GL_TEXTURE_2D, 0,  rect.x1, rect.z1, sizeX, sizeZ,  GL_RED, GL_FLOAT, pbo.GetPtr());
 
 	pbo.Invalidate();
-	pbo.Unbind();
+	pbo.Unbind();*/
 }

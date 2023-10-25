@@ -4,7 +4,6 @@
 
 #include "xsimd/xsimd.hpp"
 #include "SMFReadMap.h"
-#include "SMFGroundTextures.h"
 #include "SMFGroundDrawer.h"
 #include "SMFFormat.h"
 #include "Map/MapInfo.h"
