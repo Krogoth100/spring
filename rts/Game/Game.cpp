@@ -40,11 +40,9 @@
 #include "Rendering/LineDrawer.h"
 #include "Rendering/GlobalRendering.h"
 #include "Rendering/DebugDrawerAI.h"
-#include "Rendering/HUDDrawer.h"
 #include "Rendering/IconHandler.h"
 #include "Rendering/ModelsDataUploader.h"
 #include "Rendering/ShadowHandler.h"
-#include "Rendering/TeamHighlight.h"
 #include "Rendering/Units/UnitDrawer.h"
 #include "Rendering/UniformConstants.h"
 #include "Rendering/Map/InfoTexture/IInfoTextureHandler.h"
@@ -1486,8 +1484,6 @@ bool CGame::Draw() {
 		lastGameFrame = gs->frameNum;
 	}
 
-	//FIXME move both to UpdateUnsynced?
-	CTeamHighlight::Enable(spring_tomsecs(currentTimePreDraw));
 	{
 		minimap->Update();
 
@@ -1507,7 +1503,6 @@ bool CGame::Draw() {
 
 		eventHandler.DrawScreenEffects();
 
-		hudDrawer->Draw((gu->GetMyPlayer())->fpsController.GetControllee());
 		debugDrawerAI->Draw();
 
 		DrawInputReceivers();
@@ -1528,7 +1523,6 @@ bool CGame::Draw() {
 	}
 
 	SetDrawMode(gameNotDrawing);
-	CTeamHighlight::Disable();
 
 	const spring_time currentTimePostDraw = spring_gettime();
 	const spring_time currentFrameDrawTime = currentTimePostDraw - currentTimePreDraw;
@@ -1714,8 +1708,6 @@ void CGame::SimFrame() {
 		FPSUnitController& c = p->fpsController;
 
 		c.SendStateUpdate(/*camera->GetMovState(), mouse->buttons*/);
-
-		CTeamHighlight::Update(gs->frameNum);
 	}
 
 	// everything from here is simulation

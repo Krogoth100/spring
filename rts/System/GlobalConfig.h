@@ -116,14 +116,6 @@ public:
 
 
 	/**
-	 * @brief teamHighlight
-	 *
-	 * Team highlighting for teams that are uncontrolled or have connection
-	 * problems.
-	 */
-	int teamHighlight = 1;
-
-	/**
 	 * @brief simulation drawing balance
 	 *
 	 * Defines how much percent of the time for simulation is minimum spend for

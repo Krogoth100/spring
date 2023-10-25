@@ -56,8 +56,6 @@
 #include "Map/MetalMap.h"
 #include "Map/ReadMap.h"
 #include "Map/SMF/SMFGroundDrawer.h"
-#include "Map/SMF/ROAM/Patch.h"
-#include "Map/SMF/ROAM/RoamMeshDrawer.h"
 
 #include "Net/GameServer.h"
 #include "Net/Protocol/NetProtocol.h"
@@ -67,12 +65,10 @@
 #include "Rendering/DebugDrawerAI.h"
 #include "Rendering/IPathDrawer.h"
 #include "Rendering/Features/FeatureDrawer.h"
-#include "Rendering/HUDDrawer.h"
 #include "Rendering/LuaObjectDrawer.h"
 #include "Rendering/Screenshot.h"
 #include "Rendering/ShadowHandler.h"
 #include "Rendering/SmoothHeightMeshDrawer.h"
-#include "Rendering/TeamHighlight.h"
 #include "Rendering/Units/UnitDrawer.h"
 #include "Rendering/VerticalSync.h"
 #include "Rendering/Env/IGroundDecalDrawer.h"
@@ -251,65 +247,6 @@ public:
 
 
 
-class MapMeshDrawerActionExecutor : public IUnsyncedActionExecutor {
-public:
-	MapMeshDrawerActionExecutor() : IUnsyncedActionExecutor("mapmeshdrawer", "Switch map-mesh rendering modes: 0=GCM, 1=HLOD, 2=ROAM") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		CSMFGroundDrawer* smfDrawer = dynamic_cast<CSMFGroundDrawer*>(readMap->GetGroundDrawer());
-
-		if (smfDrawer == nullptr)
-			return false;
-
-		if (action.GetArgs().empty()) {
-			smfDrawer->SwitchMeshDrawer();
-			return true;
-		}
-
-		auto args = CSimpleParser::Tokenize(action.GetArgs());
-		bool parseFailure;
-
-		int smfMeshDrawerArg = (!args.empty()) ? StringToInt(args[0], &parseFailure) : -1.0;
-		if (parseFailure) smfMeshDrawerArg = -1.0;
-
-		smfDrawer->SwitchMeshDrawer(smfMeshDrawerArg);
-
-		return true;
-	}
-};
-
-
-class MapBorderActionExecutor : public IUnsyncedActionExecutor {
-public:
-	MapBorderActionExecutor() : IUnsyncedActionExecutor("MapBorder", "Control map-border rendering", false, {
-			{"", "Toggles map-border rendering"},
-			{"<on|off>", "Set map-border rendering <on|off>"},
-			}) {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		CSMFGroundDrawer* smfGD = dynamic_cast<CSMFGroundDrawer*>(readMap->GetGroundDrawer());
-
-		if (smfGD == nullptr)
-			return false;
-
-		if (!action.GetArgs().empty()) {
-			bool enable = true;
-			InverseOrSetBool(enable, action.GetArgs());
-
-			if (enable != smfGD->ToggleMapBorder())
-				smfGD->ToggleMapBorder();
-
-		} else {
-			smfGD->ToggleMapBorder();
-		}
-
-		return true;
-	}
-};
-
-
 class ShadowsActionExecutor : public IUnsyncedActionExecutor {
 public:
 	ShadowsActionExecutor() : IUnsyncedActionExecutor(
@@ -335,22 +272,9 @@ public:
 			return true;
 		}
 
-		shadowHandler.Reload(((action.GetArgs()).empty())? nullptr: (action.GetArgs()).c_str());
-		LOG("Set \"shadows\" config-parameter to %i", shadowHandler.shadowConfig);
-		return true;
-	}
-};
-
-class DumpShadowsActionExecutor : public IUnsyncedActionExecutor {
-public:
-	DumpShadowsActionExecutor() : IUnsyncedActionExecutor(
-		"DumpShadows",
-		"Save shadow map textures to files"
-	)
-	{}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		shadowHandler.SaveShadowMapTextures();
+		// todo: -shadow render cleanup
+		//shadowHandler.Reload(((action.GetArgs()).empty())? nullptr: (action.GetArgs()).c_str());
+		//LOG("Set \"shadows\" config-parameter to %i", shadowHandler.shadowConfig);
 		return true;
 	}
 };
@@ -426,29 +350,6 @@ public:
 };
 
 
-
-class AdvMapShadingActionExecutor : public IUnsyncedActionExecutor {
-public:
-	AdvMapShadingActionExecutor() : IUnsyncedActionExecutor("AdvMapShading",
-			"Control advanced map shading mode",
-			false, {
-			{"", "Toggles advanced map shading mode"},
-			{"<on|off>", "Set advanced map shading mode <on|off>"},
-			}) {}
-
-	bool Execute(const UnsyncedAction& action) const {
-
-		CBaseGroundDrawer* gd = readMap->GetGroundDrawer();
-		static bool canUseShaders = gd->UseAdvShading();
-
-		if (!canUseShaders)
-			return false;
-
-		InverseOrSetBool(gd->UseAdvShadingRef(), action.GetArgs());
-		LogSystemStatus("map shaders", gd->UseAdvShading());
-		return true;
-	}
-};
 
 class UnitDrawerTypeActionExecutor : public IUnsyncedActionExecutor {
 public:
@@ -1846,27 +1747,6 @@ public:
 
 
 
-class GroundDetailActionExecutor : public IUnsyncedActionExecutor {
-public:
-	GroundDetailActionExecutor() : IUnsyncedActionExecutor("GroundDetail",
-			"Set the level of ground detail") {}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		int detail;
-		if (action.GetArgs().empty()) {
-			LOG_L(L_WARNING, "/%s: missing argument", GetCommand().c_str());
-			return false;
-		}
-		detail = StringToInt((action.GetArgs()).c_str());
-
-		readMap->GetGroundDrawer()->SetDetail(detail);
-		return true;
-	}
-
-};
-
-
-
 class MoreCloudsActionExecutor : public IUnsyncedActionExecutor {
 public:
 	MoreCloudsActionExecutor() : IUnsyncedActionExecutor("MoreClouds",
@@ -2432,29 +2312,6 @@ public:
 };
 
 
-class TeamHighlightActionExecutor : public IUnsyncedActionExecutor {
-public:
-	TeamHighlightActionExecutor() : IUnsyncedActionExecutor("TeamHighlight", "Enables/Disables uncontrolled team blinking") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		if (action.GetArgs().empty()) {
-			globalConfig.teamHighlight = abs(globalConfig.teamHighlight + 1) % CTeamHighlight::HIGHLIGHT_SIZE;
-		} else {
-			globalConfig.teamHighlight = abs(StringToInt(action.GetArgs())) % CTeamHighlight::HIGHLIGHT_SIZE;
-		}
-
-		LOG("Team highlighting: %s",
-				((globalConfig.teamHighlight == CTeamHighlight::HIGHLIGHT_PLAYERS) ? "Players only"
-				: ((globalConfig.teamHighlight == CTeamHighlight::HIGHLIGHT_ALL) ? "Players and spectators"
-				: "Disabled")));
-
-		configHandler->Set("TeamHighlight", globalConfig.teamHighlight);
-		return true;
-	}
-};
-
-
 
 class InfoActionExecutor : public IUnsyncedActionExecutor {
 public:
@@ -2624,22 +2481,6 @@ public:
 		}
 		LOG(fmt, strs[CEndGameBox::enabledMode]);
 
-		return true;
-	}
-};
-
-
-
-class FPSHudActionExecutor : public IUnsyncedActionExecutor {
-public:
-	FPSHudActionExecutor() : IUnsyncedActionExecutor("FPSHud", "Enables/Disables HUD (GUI interface) shown in first-person-control mode") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-
-		bool drawHUD = hudDrawer->GetDraw();
-		InverseOrSetBool(drawHUD, action.GetArgs());
-		hudDrawer->SetDraw(drawHUD);
 		return true;
 	}
 };
@@ -3224,19 +3065,6 @@ public:
 	}
 };
 
-class WireMapActionExecutor: public IUnsyncedActionExecutor {
-public:
-	WireMapActionExecutor(): IUnsyncedActionExecutor("WireMap", "Toggle wireframe-mode drawing of map geometry") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		CBaseGroundDrawer* gd = readMap->GetGroundDrawer();
-
-		LogSystemStatus("wireframe map-drawing mode", gd->WireFrameModeRef() = !gd->WireFrameModeRef());
-		return true;
-	}
-};
-
 class WireSkyActionExecutor: public IUnsyncedActionExecutor {
 public:
 	WireSkyActionExecutor(): IUnsyncedActionExecutor("WireSky", "Toggle wireframe-mode drawing of skydome geometry") {
@@ -3574,38 +3402,12 @@ public:
 			LOG("Reloading SMF textures");
 			readMap->ReloadTextures();
 		};
-		auto cegFunc = []() {
-			LOG("Reloading CEG textures");
-			projectileDrawer->textureAtlas->ReloadTextures();
-			projectileDrawer->groundFXAtlas->ReloadTextures();
-		};
 
 		std::array argsExec = {
 			ArgTuple(hashString("lua") , false, luaFunc),
 			ArgTuple(hashString("s3o") , false, s3oFunc),
 			ArgTuple(hashString("ssmf"), false, smfFunc),
 			ArgTuple(hashString("smf") , false, smfFunc),
-			ArgTuple(hashString("cegs"), false, cegFunc),
-			ArgTuple(hashString("ceg") , false, cegFunc),
-		};
-
-		auto args = CSimpleParser::Tokenize(action.GetArgs(), 1);
-		return GenericArgsExecutor(args, argsExec);
-	}
-};
-
-class DumpAtlasActionExecutor : public IUnsyncedActionExecutor {
-public:
-	DumpAtlasActionExecutor() : IUnsyncedActionExecutor("DumpAtlas", "Save Some Atlases") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		std::array argsExec = {
-			ArgTuple(hashString("proj"), false, []() {
-				LOG("Dumping projectile textures");
-				projectileDrawer->textureAtlas->DumpTexture("TextureAtlas");
-				projectileDrawer->groundFXAtlas->DumpTexture("GroundFXAtlas");
-			}),
 		};
 
 		auto args = CSimpleParser::Tokenize(action.GetArgs(), 1);
@@ -3840,13 +3642,9 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<SelectCycleActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DeselectActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ShadowsActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<DumpShadowsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<MapShadowPolyOffsetActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<MapMeshDrawerActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<MapBorderActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WaterActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<AdvModelShadingActionExecutor>()); // [maint]
-	AddActionExecutor(AllocActionExecutor<AdvMapShadingActionExecutor>()); // [maint]
 	AddActionExecutor(AllocActionExecutor<UnitDrawerTypeActionExecutor>()); // [maint]
 	AddActionExecutor(AllocActionExecutor<FeatureDrawerTypeActionExecutor>()); // [maint]
 	AddActionExecutor(AllocActionExecutor<SayActionExecutor>());
@@ -3931,7 +3729,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	// [devel] AddActionExecutor(AllocActionExecutor<GammaExponentActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<IncreaseViewRadiusActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DecreaseViewRadiusActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<GroundDetailActionExecutor>());
 	// [devel] AddActionExecutor(AllocActionExecutor<MoreGrassActionExecutor>());
 	// [devel] AddActionExecutor(AllocActionExecutor<LessGrassActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<FeatureFadeDistActionExecutor>());
@@ -3963,7 +3760,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<CrossActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<FPSActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<SpeedActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<TeamHighlightActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<InfoActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<CmdColorsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<CtrlPanelActionExecutor>());
@@ -3974,7 +3770,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<ToolTipActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ConsoleActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<EndGraphActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<FPSHudActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DebugDrawAIActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<MapMarksActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<AllMapMarksActionExecutor>());
@@ -4007,7 +3802,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<LODScaleActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<AirMeshActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WireModelActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<WireMapActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WireSkyActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<WireWaterActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<CrashActionExecutor>());
@@ -4024,7 +3818,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<SaveActionExecutor>(false));
 	AddActionExecutor(AllocActionExecutor<ReloadShadersActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ReloadTexturesActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<DumpAtlasActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DebugInfoActionExecutor>());
 
 	// XXX are these redirects really required?
