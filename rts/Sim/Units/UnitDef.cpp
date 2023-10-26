@@ -599,7 +599,7 @@ UnitDef::UnitDef(const LuaTable& udTable, const std::string& unitName, int id)
 
 
 	modelName = udTable.GetString("objectName", "");
-	scriptName = "scripts/" + udTable.GetString("script", unitName + ".cob");
+	scriptName = "unitscripts/" + udTable.GetString("script", unitName + ".cob");
 
 	deathExpWeaponDef = weaponDefHandler->GetWeaponDef(udTable.GetString("explodeAs", ""));
 	selfdExpWeaponDef = weaponDefHandler->GetWeaponDef(udTable.GetString("selfDestructAs", udTable.GetString("explodeAs", "")));
