@@ -181,7 +181,7 @@ std::string CModelLoader::FindModelPath(std::string name) const
 	if (name.empty())
 		return name;
 
-	const std::string vfsPath = "objects3d/";
+	const std::string vfsPath = "objectmodels/";
 
 	if (const std::string& fileExt = FileSystem::GetExtension(name); fileExt.empty()) {
 		for (const auto& [formatExt, parser] : parsers) {
@@ -292,7 +292,7 @@ S3DModel* CModelLoader::GetCachedModel(std::string fullName)
 
 	static const auto CompPred = [](auto&& lhs, auto&& rhs) { return lhs.first < rhs.first; };
 
-	static constexpr std::string_view O3D = "objects3d/";
+	static constexpr std::string_view O3D = "objectmodels/";
 	if (auto oi = fullName.find(O3D); oi != std::string::npos) {
 		assert(oi == 0u);
 		fullName.erase(0, O3D.size());
