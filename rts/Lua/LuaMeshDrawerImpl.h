@@ -11,6 +11,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <utility>
 
 class VAO;
 class LuaXBOImpl;
@@ -123,7 +124,7 @@ public:
 	std::vector<Bin> bins;
 
 	spring::unordered_map<int, size_t> modelIdToBinIndex;
-	spring::unordered_map<int, size_t> objIdToLocalInstance;
+	spring::unordered_map<int, std::pair<size_t, int>> objIdToLocalInstanceAndModelId;
 
 	std::vector<SInstanceData> instanceData;
 	bool requireInstanceDataUpload = false;

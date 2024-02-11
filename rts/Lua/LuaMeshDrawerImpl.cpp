@@ -409,8 +409,8 @@ void LuaMeshDrawerImpl::Bins::UpdateImpl(const sol::stack_table& removedObjects,
 		lua_Number objIdLua = removedObjects.raw_get<lua_Number>(i);
 		const int objId = spring::SafeCast<int, lua_Number>(objIdLua);
 
-		const TObj* obj = LuaUtils::SolIdToObject<TObj>(objId, __func__);
-		const int modelId = obj->model->id;
+		const auto [localInstance, modelId] = objIdToLocalInstanceAndModelId[objId];
+			// Obtaining saved up modelId via map as well, as the object may already be destroyed and its interface is unusable at this point
 		const size_t binIndex = modelIdToBinIndex[modelId];
 		firstChangedBinIndex = std::min(firstChangedBinIndex, binIndex);
 		auto& bin = bins[binIndex];
@@ -424,14 +424,16 @@ void LuaMeshDrawerImpl::Bins::UpdateImpl(const sol::stack_table& removedObjects,
 
 		if (bin.objIds.size() == 1) {
 			UnorderedMapSubstitute(modelIdToBinIndex, modelId, bins.back().modelId, binIndex);
-			objIdToLocalInstance.erase(objId);
+			objIdToLocalInstanceAndModelId.erase(objId);
 			UnorderedErase(bins, binIndex);
 			UnorderedErase(submitCmds, binIndex);
 			continue;
 		}
 
-		const size_t localInstance = objIdToLocalInstance[objId];
-		UnorderedMapSubstitute(objIdToLocalInstance, objId, bin.objIds.back(), localInstance);
+		//UnorderedMapSubstitute(objIdToLocalInstanceAndModelId, objId, bin.objIds.back(), localInstance);
+			objIdToLocalInstanceAndModelId[bin.objIds.back()].first = localInstance;
+			objIdToLocalInstanceAndModelId.erase(objId);
+
 		UnorderedErase(bin.objIds, localInstance);
 		UnorderedErase(bin.instanceData, localInstance);
 		--submitCmds[binIndex].instanceCount;
@@ -469,7 +471,7 @@ void LuaMeshDrawerImpl::Bins::UpdateImpl(const sol::stack_table& removedObjects,
 		firstChangedBinIndex = std::min(firstChangedBinIndex, binIndex);
 		auto& bin = bins[binIndex];
 
-		objIdToLocalInstance[objId] = bin.objIds.size();
+		objIdToLocalInstanceAndModelId[objId] = decltype(objIdToLocalInstanceAndModelId)::mapped_type(bin.objIds.size(), modelId);
 		bin.objIds.emplace_back(objId);
 		bin.instanceData.emplace_back(GetObjectInstanceData(obj));
 		++submitCmds[binIndex].instanceCount;
