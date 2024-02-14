@@ -57,7 +57,7 @@ public:
 		GLfloat aniso = 0.0f;
 	};
 
-	std::string Create(const Texture& tex);
+	std::string Create(const Texture& tex, GLuint& texID);
 	bool Bind(const std::string& name) const;
 	bool Free(const std::string& name);
 	bool FreeFBO(const std::string& name);

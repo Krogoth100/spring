@@ -37,7 +37,7 @@ namespace Impl {
 /******************************************************************************/
 /******************************************************************************/
 
-std::string LuaTextures::Create(const Texture& tex)
+std::string LuaTextures::Create(const Texture& tex, GLuint& texID)
 {
 	GLenum query = 0;
 	if (Impl::IsValidLuaTextureTarget(tex.target)) {
@@ -51,7 +51,6 @@ std::string LuaTextures::Create(const Texture& tex)
 	GLint currentBinding;
 	glGetIntegerv(query, &currentBinding);
 
-	GLuint texID;
 	glGenTextures(1, &texID);
 	glBindTexture(tex.target, texID);
 

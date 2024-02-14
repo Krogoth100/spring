@@ -3424,13 +3424,15 @@ int LuaOpenGL::CreateTexture(lua_State* L)
 	}
 
 	LuaTextures& textures = CLuaHandle::GetActiveTextures(L);
-	const string& texName = textures.Create(tex);
+	GLuint texId;
+	const string& texName = textures.Create(tex, texId);
 
 	if (texName.empty())
 		return 0;
 
 	lua_pushsstring(L, texName);
-	return 1;
+	lua_pushnumber(L, texId);
+	return 2;
 }
 
 int LuaOpenGL::ChangeTextureParams(lua_State* L)

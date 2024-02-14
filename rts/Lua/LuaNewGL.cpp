@@ -199,6 +199,13 @@ sol::optional<int> GetFeatureDefModelIndexStart(int featureDefID)
 	return model->indxStart;
 }
 
+/* Lua */
+void BindSampler(GLenum slot, GLenum target, GLuint textureId)
+{
+	glActiveTexture(GL_TEXTURE0+slot);
+	glBindTexture(target, textureId);
+}
+
 
 bool LuaNewGL::PushEntries(lua_State* L)
 {
@@ -221,7 +228,9 @@ bool LuaNewGL::PushEntries(lua_State* L)
 		"BindEngineModelMeshBuffers", &BindEngineModelMeshBuffers,
 		"UnbindEngineModelMeshBuffers", &UnbindEngineModelMeshBuffers,
 		"GetUnitDefModelIndexStart", &GetUnitDefModelIndexStart,
-		"GetFeatureDefModelIndexStart", &GetFeatureDefModelIndexStart
+		"GetFeatureDefModelIndexStart", &GetFeatureDefModelIndexStart,
+
+		"BindSampler", &BindSampler
 	);
 
 #if defined(__GNUG__) && defined(_DEBUG)
