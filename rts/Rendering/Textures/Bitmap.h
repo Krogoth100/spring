@@ -47,7 +47,7 @@ public:
 	/// Load data from a file on the VFS
 	bool Load(std::string const& filename, float defaultAlpha = 1.0f, uint32_t reqChannel = 4, uint32_t reqDataType = 0x1401/*GL_UNSIGNED_BYTE*/, bool forceReplaceAlpha = false);
 	/// Load data from a gray-scale file on the VFS
-	bool LoadGrayscale(std::string const& filename);
+	bool LoadGrayscale(std::string const& filename, bool _16bit = false);
 
 	bool Save(const std::string& filename, bool opaque, bool logged = false, unsigned quality = 80) const;
 	bool SaveGrayScale(const std::string& filename) const;

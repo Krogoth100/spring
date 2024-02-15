@@ -1300,19 +1300,20 @@ bool CBitmap::Load(std::string const& filename, float defaultAlpha, uint32_t req
 		return false;
 	}
 
-	if (!hasAlpha || forceReplaceAlpha)
+	if (channels == 4 && (!hasAlpha || forceReplaceAlpha))
 		ReplaceAlpha(defaultAlpha);
 
 	return true;
 }
 
 
-bool CBitmap::LoadGrayscale(const std::string& filename)
+bool CBitmap::LoadGrayscale(const std::string& filename, bool _16bit)
 {
 	const size_t curMemSize = GetMemSize();
 
 	compressed = false;
 	channels = 1;
+	dataType = _16bit? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE;
 
 
 	CFileHandler file(filename);
@@ -1346,7 +1347,7 @@ bool CBitmap::LoadGrayscale(const std::string& filename)
 		if (!success)
 			return false;
 
-		ilConvertImage(IL_LUMINANCE, IL_UNSIGNED_BYTE);
+		ilConvertImage(IL_LUMINANCE, _16bit? IL_UNSIGNED_SHORT : IL_UNSIGNED_BYTE);
 		xsize = ilGetInteger(IL_IMAGE_WIDTH);
 		ysize = ilGetInteger(IL_IMAGE_HEIGHT);
 
