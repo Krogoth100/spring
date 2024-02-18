@@ -212,6 +212,8 @@ bool CLuaIntro::LoadUnsyncedCtrlFunctions(lua_State* L)
 
 	REGISTER_SCOPED_LUA_CFUNC(LuaUnsyncedCtrl, SetLogSectionFilterLevel);
 
+	REGISTER_SCOPED_LUA_CFUNC(LuaUnsyncedCtrl, SetTerrainPhysicalHeightMap);
+
 	return true;
 }
 

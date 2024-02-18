@@ -7,18 +7,6 @@
 #include <cmath>
 
 
-/* Lua */
-void SetHeightMapFromTexture(GLuint texture, GLint x, GLint y, GLsizei w, GLsizei h)
-{
-}
-
-/* Lua */
-void SetHeightMapFromTexture(GLuint texture)
-{
-    //SetHeightMapFromTexture(texture, 1,1, );
-}
-
-
 bool LuaNewUnsynced::PushEntries(lua_State* L)
 {
 #if defined(__GNUG__) && defined(_DEBUG)
@@ -27,12 +15,9 @@ bool LuaNewUnsynced::PushEntries(lua_State* L)
 	sol::state_view lua(L);
 	auto spring = sol::stack::get<sol::table>(L);
 
-	spring.create_named("PF",
-		"SetHeightMapFromTexture", sol::overload(
-			sol::resolve<void(GLuint)>(&SetHeightMapFromTexture),
-			sol::resolve<void(GLuint, GLint,GLint, GLsizei,GLsizei)>(&SetHeightMapFromTexture)
-		)
-	);
+	/*spring.create_named("PF",
+		...
+	);*/
 
 #if defined(__GNUG__) && defined(_DEBUG)
 	lua_settop(L, top); //workaround for https://github.com/ThePhD/sol2/issues/1441, remove when fixed

@@ -124,7 +124,8 @@ void CSMFReadMap::ParseHeader()
 
 void CSMFReadMap::LoadHeightMap()
 {
-	const SMFHeader& header = mapFile.GetHeader();
+	//!clean
+	//const SMFHeader& header = mapFile.GetHeader();
 
 	cornerHeightMapSynced.clear();
 	cornerHeightMapSynced.resize((mapDims.mapx + 1) * (mapDims.mapy + 1)); //mapDims.mapxp1, mapDims.mapyp1 are not available here
@@ -134,18 +135,20 @@ void CSMFReadMap::LoadHeightMap()
 	heightMapSyncedPtr   = &cornerHeightMapSynced;
 	heightMapUnsyncedPtr = &cornerHeightMapUnsynced;
 
-	const float minHgt = mapInfo->smf.minHeightOverride ? mapInfo->smf.minHeight : header.minHeight;
-	const float maxHgt = mapInfo->smf.maxHeightOverride ? mapInfo->smf.maxHeight : header.maxHeight;
+	//!clean
+	//const float minHgt = mapInfo->smf.minHeightOverride ? mapInfo->smf.minHeight : header.minHeight;
+	//const float maxHgt = mapInfo->smf.maxHeightOverride ? mapInfo->smf.maxHeight : header.maxHeight;
 
-	float* cornerHeightMapSyncedData = cornerHeightMapSynced.data();
-	float* cornerHeightMapUnsyncedData = cornerHeightMapUnsynced.data();
+	//float* cornerHeightMapSyncedData = cornerHeightMapSynced.data();
+	//float* cornerHeightMapUnsyncedData = cornerHeightMapUnsynced.data();
 
 	// FIXME:
 	//     callchain CReadMap::Initialize --> CReadMap::UpdateHeightMapSynced(0, 0, mapDims.mapx, mapDims.mapy) -->
 	//     PushVisibleHeightMapUpdate --> (next UpdateDraw) UpdateHeightMapUnsynced(0, 0, mapDims.mapx, mapDims.mapy)
 	//     initializes the UHM a second time
 	//     merge them some way so UHM & shadingtex is available from the time readMap got created
-	mapFile.ReadHeightmap(cornerHeightMapSyncedData, cornerHeightMapUnsyncedData, minHgt, (maxHgt - minHgt) / 65536.0f);
+	//mapFile.ReadHeightmap(cornerHeightMapSyncedData, cornerHeightMapUnsyncedData, minHgt, (maxHgt - minHgt) / 65536.0f);
+	mapFile.ReadHeightmap(cornerHeightMapSynced.data(), cornerHeightMapUnsynced.data(), 0, 0);
 }
 
 

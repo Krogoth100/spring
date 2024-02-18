@@ -203,6 +203,9 @@ class LuaUnsyncedCtrl {
 		static int SetWindowMaximized(lua_State* L);
 
 		static int Yield(lua_State* L);
+
+		//!temp
+		static int SetTerrainPhysicalHeightMap(lua_State* L);
 };
 
 #endif /* LUA_UNSYNCED_CTRL_H */

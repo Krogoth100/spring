@@ -40,6 +40,7 @@
 #include "Map/ReadMap.h"
 #include "Map/BaseGroundDrawer.h"
 #include "Map/SMF/SMFGroundDrawer.h"
+#include "Map/NewUtils.h"
 #include "Net/Protocol/NetProtocol.h"
 #include "Net/GameServer.h"
 #include "Rendering/Env/ISky.h"
@@ -4832,4 +4833,11 @@ int LuaUnsyncedCtrl::Yield(lua_State* L)
 
 	lua_pushboolean(L, true); //hint Lua should keep calling Yield
 	return 1;
+}
+
+
+//!temp
+int LuaUnsyncedCtrl::SetTerrainPhysicalHeightMap(lua_State* L) {
+	SetHeightMapRequisites(luaL_checkstring(L, 1), luaL_checkfloat(L, 2), luaL_checkfloat(L, 3));
+	return 0;
 }

@@ -3,6 +3,7 @@
 
 #include "SMFMapFile.h"
 #include "Map/ReadMap.h"
+#include "Map/NewUtils.h"
 #include "System/Exceptions.h"
 #include "System/StringHash.h"
 #include "System/Platform/byteorder.h"
@@ -113,7 +114,8 @@ void CSMFMapFile::ReadHeightmap(float* sHeightMap, float* uHeightMap, float base
 
 	assert(sHeightMap != nullptr);
 
-	if (uHeightMap == nullptr)
+	//!clean
+	/*if (uHeightMap == nullptr)
 		uHeightMap = sHeightMap;
 
 	ifs.Seek(header.heightmapPtr);
@@ -123,6 +125,11 @@ void CSMFMapFile::ReadHeightmap(float* sHeightMap, float* uHeightMap, float base
 
 		sHeightMap[i] = base + swabWord(word) * mod;
 		uHeightMap[i] = sHeightMap[i];
+	}*/
+
+	GetHeightDataFromCurFile(sHeightMap);
+	if (uHeightMap) {
+		std::memcpy(uHeightMap, sHeightMap, len*sizeof(float));
 	}
 }
 
