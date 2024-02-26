@@ -16,19 +16,10 @@ class CLosTexture : public CPboInfoTexture
 {
 public:
 	CLosTexture();
-	~CLosTexture() override;
 
 public:
 	void Update() override;
 	bool IsUpdateNeeded() override { return true; }
-
-private:
-	void UpdateCPU();
-
-private:
-	FBO fbo;
-	GLuint uploadTex;
-	Shader::IProgramObject* shader;
 };
 
 #endif // _LOS_TEXTURE_H
