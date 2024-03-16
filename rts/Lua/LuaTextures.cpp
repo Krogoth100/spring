@@ -61,29 +61,15 @@ std::string LuaTextures::Create(const Texture& tex, GLuint& texID)
 
 	switch (tex.target) {
 		case GL_TEXTURE_1D: {
-			glTexImage1D(tex.target, 0, tex.format, tex.xsize                      , tex.border, dataFormat, dataType, nullptr);
+			glTexStorage1D(GL_TEXTURE_1D, tex.mipsN, tex.format, tex.xsize);
 		} break;
 		case GL_TEXTURE_2D: {
-			glTexImage2D(tex.target, 0, tex.format, tex.xsize, tex.ysize           , tex.border, dataFormat, dataType, nullptr);
+			glTexStorage2D(GL_TEXTURE_2D, tex.mipsN, tex.format, tex.xsize, tex.ysize);
 		} break;
 		case GL_TEXTURE_2D_ARRAY: [[fallthrough]];
 		case GL_TEXTURE_3D: {
-			glTexImage3D(tex.target, 0, tex.format, tex.xsize, tex.ysize, tex.zsize, tex.border, dataFormat, dataType, nullptr);
+			glTexStorage3D(GL_TEXTURE_3D, tex.mipsN, tex.format, tex.xsize, tex.ysize, tex.zsize);
 		} break;
-
-		case GL_TEXTURE_2D_MULTISAMPLE: {
-			assert(tex.samples > 1);
-
-			// 2DMS target only makes sense for FBO's
-			if (!globalRendering->supportMSAAFrameBuffer) {
-				glDeleteTextures(1, &texID);
-				glBindTexture(tex.target, currentBinding);
-				return "";
-			}
-
-			glTexImage2DMultisample(tex.target, tex.samples, tex.format, tex.xsize, tex.ysize, GL_TRUE);
-		} break;
-
 		default: {
 			assert(false);
 		} break;
@@ -99,55 +85,10 @@ std::string LuaTextures::Create(const Texture& tex, GLuint& texID)
 
 	glBindTexture(tex.target, currentBinding); // revert the current binding
 
-	GLuint fbo = 0;
-	GLuint fboDepth = 0;
-
-	if (tex.fbo != 0) {
-		if (!FBO::IsSupported()) {
-			glDeleteTextures(1, &texID);
-			return "";
-		}
-
-		GLint currentFBO;
-		glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, &currentFBO);
-
-		glGenFramebuffersEXT(1, &fbo);
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo);
-
-		if (tex.fboDepth != 0) {
-			glGenRenderbuffersEXT(1, &fboDepth);
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, fboDepth);
-			GLenum depthFormat = static_cast<GLenum>(CGlobalRendering::DepthBitsToFormat(globalRendering->supportDepthBufferBitDepth));
-			glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, depthFormat, tex.xsize, tex.ysize);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, fboDepth);
-		}
-
-		bool attachFailure = false;
-		try {
-			LuaFBOs::AttachObjectTexTarget(__func__, GL_FRAMEBUFFER_EXT, tex.target, texID, GL_COLOR_ATTACHMENT0_EXT, 0);
-		}
-		catch (const opengl_error& e) {
-			attachFailure = true;
-			LOG_L(L_ERROR, "[LuaTextures::%s] %s", __func__, e.what());
-		}
-
-		if (glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT) != GL_FRAMEBUFFER_COMPLETE_EXT || attachFailure) {
-			glDeleteTextures(1, &texID);
-			glDeleteFramebuffersEXT(1, &fbo);
-			glDeleteRenderbuffersEXT(1, &fboDepth);
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, currentFBO);
-			return "";
-		}
-
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, currentFBO);
-	}
-
 	std::string str = fmt::format("{}{}", prefix, ++lastCode);
 
 	Texture newTex = tex;
 	newTex.id = texID;
-	newTex.fbo = fbo;
-	newTex.fboDepth = fboDepth;
 
 	if (freeIndices.empty()) {
 		textureMap.insert(str, textureVec.size());
@@ -185,11 +126,6 @@ bool LuaTextures::Free(const std::string& name)
 		const Texture& tex = textureVec[it->second];
 		glDeleteTextures(1, &tex.id);
 
-		if (FBO::IsSupported()) {
-			glDeleteFramebuffersEXT(1, &tex.fbo);
-			glDeleteRenderbuffersEXT(1, &tex.fboDepth);
-		}
-
 		freeIndices.push_back(it->second);
 		textureMap.erase(it);
 		return true;
@@ -211,11 +147,6 @@ bool LuaTextures::FreeFBO(const std::string& name)
 
 	Texture& tex = textureVec[it->second];
 
-	glDeleteFramebuffersEXT(1, &tex.fbo);
-	glDeleteRenderbuffersEXT(1, &tex.fboDepth);
-
-	tex.fbo = 0;
-	tex.fboDepth = 0;
 	return true;
 }
 
@@ -225,11 +156,6 @@ void LuaTextures::FreeAll()
 	for (const auto& item: textureMap) {
 		const Texture& tex = textureVec[item.second];
 		glDeleteTextures(1, &tex.id);
-
-		if (FBO::IsSupported()) {
-			glDeleteFramebuffersEXT(1, &tex.fbo);
-			glDeleteRenderbuffersEXT(1, &tex.fboDepth);
-		}
 	}
 
 	textureMap.clear();

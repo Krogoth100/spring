@@ -29,10 +29,6 @@ public:
 	struct Texture {
 		GLuint id = 0;
 
-		// FIXME: obsolete, use raw FBO's
-		GLuint fbo = 0;
-		GLuint fboDepth = 0;
-
 		GLenum target = GL_TEXTURE_2D;
 		GLenum format = GL_RGBA8;
 
@@ -40,8 +36,6 @@ public:
 		GLsizei ysize   = 0;
 		GLsizei zsize   = 0;
 		GLsizei samples = 0;
-
-		GLint border = 0;
 
 		GLenum min_filter = GL_LINEAR;
 		GLenum mag_filter = GL_LINEAR;
@@ -51,6 +45,8 @@ public:
 		GLenum wrap_r = GL_REPEAT;
 
 		GLenum cmpFunc = GL_NONE;
+
+		GLsizei mipsN = 1;
 
 		GLfloat lodBias = 0.0f;
 

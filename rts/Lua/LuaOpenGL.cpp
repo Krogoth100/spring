@@ -3390,6 +3390,9 @@ int LuaOpenGL::CreateTexture(lua_State* L)
 			if (lua_israwnumber(L, -1)) {
 				uint32_t strHash = hashString(lua_tostring(L, -2));
 				switch (strHash) {
+					case hashString("mipsN"): {
+						tex.mipsN = (GLsizei)lua_tonumber(L, -1);
+					} break;
 					case hashString("samples"): {
 						// not std::clamp(lua_tonumber(L, -1), 2, globalRendering->msaaLevel);
 						// AA sample count has to equal the default FB or blitting breaks
@@ -3403,23 +3406,12 @@ int LuaOpenGL::CreateTexture(lua_State* L)
 				continue;
 			}
 
-			if (lua_isboolean(L, -1)) {
+			/*if (lua_isboolean(L, -1)) {
 				switch (hashString(lua_tostring(L, -2))) {
-					case hashString("border"): {
-						tex.border   = lua_toboolean(L, -1) ? 1 : 0;
-					} break;
-					case hashString("fbo"): {
-						tex.fbo      = lua_toboolean(L, -1) ? 1 : 0;
-					} break;
-					case hashString("fboDepth"): {
-						tex.fboDepth = lua_toboolean(L, -1) ? 1 : 0;
-					} break;
-					default: {
-					} break;
 				}
 
 				continue;
-			}
+			}*/
 		}
 	}
 
@@ -3547,48 +3539,6 @@ int LuaOpenGL::CopyToTexture(lua_State* L)
 // FIXME: obsolete
 int LuaOpenGL::RenderToTexture(lua_State* L)
 {
-	CheckDrawingEnabled(L, __func__);
-
-	const std::string& texture = luaL_checkstring(L, 1);
-
-	if (texture[0] != LuaTextures::prefix) // '!'
-		luaL_error(L, "gl.RenderToTexture() can only write to fbo textures");
-
-	if (!lua_isfunction(L, 2))
-		luaL_error(L, "Incorrect arguments to gl.RenderToTexture()");
-
-	const LuaTextures& textures = CLuaHandle::GetActiveTextures(L);
-	const LuaTextures::Texture* tex = textures.GetInfo(texture);
-
-	if ((tex == nullptr) || (tex->fbo == 0))
-		return 0;
-
-	GLint currentFBO = 0;
-	if (drawMode == DRAW_WORLD_SHADOW) {
-		glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, &currentFBO);
-	}
-
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, tex->fbo);
-
-	glPushAttrib(GL_VIEWPORT_BIT);
-	glViewport(0, 0, tex->xsize, tex->ysize);
-	glMatrixMode(GL_PROJECTION); glPushMatrix(); glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW);  glPushMatrix(); glLoadIdentity();
-
-	const int error = lua_pcall(L, lua_gettop(L) - 2, 0, 0);
-
-	glMatrixMode(GL_PROJECTION); glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);  glPopMatrix();
-	glPopAttrib();
-
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, currentFBO);
-
-	if (error != 0) {
-		LOG_L(L_ERROR, "gl.RenderToTexture: error(%i) = %s",
-				error, lua_tostring(L, -1));
-		lua_error(L);
-	}
-
 	return 0;
 }
 
