@@ -56,6 +56,7 @@ set(sources_engine_Lua
 		"${CMAKE_CURRENT_SOURCE_DIR}/LuaMeshDrawerImpl.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/LuaXBO.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/LuaXBOImpl.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/LuaNewSynced.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/LuaNewUnsynced.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/LuaNewMath.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/LuaNewGL.cpp"

@@ -62,7 +62,9 @@ public:
 private:
 	void InitMapChangeTracking();
 	void InitDataStructures();
+public:
 	void MakeSmoothMesh();
+private:
 	void UpdateSmoothMeshMaximas(int2 damageMin, int2 damageMax);
 
 	bool enabled = true;

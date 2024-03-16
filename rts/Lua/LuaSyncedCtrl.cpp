@@ -12,6 +12,7 @@
 #include "LuaHashString.h"
 #include "LuaMetalMap.h"
 #include "LuaSyncedMoveCtrl.h"
+#include "LuaNewSynced.h"
 #include "LuaUtils.h"
 #include "Game/Game.h"
 #include "Game/GameSetup.h"
@@ -355,6 +356,9 @@ bool LuaSyncedCtrl::PushEntries(lua_State* L)
 		return false;
 
 	if (!LuaMetalMap::PushCtrlEntries(L))
+		return false;
+
+	if (!LuaNewSynced::PushEntries(L))
 		return false;
 
 	return true;

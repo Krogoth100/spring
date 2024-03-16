@@ -103,6 +103,13 @@ namespace Impl {
 		return Sol::MultipleNumbers<4>(values[0],values[1],values[2],values[3]);
 	}
 
+	template<class Type>
+	inline Sol::MultipleNumbers<4> ReadTexelResult(GLuint textureId, GLint x, GLint y, GLint z, GLenum format, GLenum readType) {
+		Type values[4];
+		glGetTextureSubImage(textureId, 0, x,y,z, 1,1,1, format, readType, sizeof(Type)*4, values);
+		return Sol::MultipleNumbers<4>(values[0],values[1],values[2],values[3]);
+	}
+
 	Sol::MultipleNumbers<4> ReadAttachmentPixel(GLenum attachment, GLint x, GLint y, sol::this_state& lua)
 	{
 		const auto activeLuaFBO = CLuaHandle::GetActiveFBOs(lua).GetActiveReadFBO();
@@ -143,6 +150,27 @@ Sol::MultipleNumbers<4> ReadAttachmentPixel(const char* slot, GLint x, GLint y, 
 	assert(hashString(slot) == hashString("depth"));
 
 	return Impl::ReadAttachmentPixel(GL_DEPTH_ATTACHMENT, x,y, lua);
+}
+
+/* Lua */
+Sol::MultipleNumbers<4> ReadTexel(GLuint textureId, GLenum internalFormat, GLint x, GLint y, sol::optional<GLint> z_)
+{
+	const GLint z = z_.value_or(0);
+	const GLenum format = GL::GetInternalFormatDataFormat(internalFormat);
+	const GLenum readType = GL::GetInternalFormatUserType(internalFormat);
+
+	switch(readType) {
+	case GL_FLOAT:          return Impl::ReadTexelResult<GLfloat> (textureId, x, y, z, format, readType);
+	case GL_HALF_FLOAT:     return Impl::ReadTexelResult<GLhalf>  (textureId, x, y, z, format, readType);
+	case GL_INT:            return Impl::ReadTexelResult<GLint>   (textureId, x, y, z, format, readType);
+	case GL_SHORT:          return Impl::ReadTexelResult<GLshort> (textureId, x, y, z, format, readType);
+	case GL_BYTE:           return Impl::ReadTexelResult<GLbyte>  (textureId, x, y, z, format, readType);
+	case GL_UNSIGNED_INT:   return Impl::ReadTexelResult<GLuint>  (textureId, x, y, z, format, readType);
+	case GL_UNSIGNED_SHORT: return Impl::ReadTexelResult<GLushort>(textureId, x, y, z, format, readType);
+	case GL_UNSIGNED_BYTE:  return Impl::ReadTexelResult<GLubyte> (textureId, x, y, z, format, readType);
+	}
+
+	return Sol::MultipleNumbers<4>(0,0,0,0);
 }
 
 
@@ -224,6 +252,7 @@ bool LuaNewGL::PushEntries(lua_State* L)
 			sol::resolve<Sol::MultipleNumbers<4>(sol::optional<GLenum>, GLint,GLint, sol::this_state)>(&ReadAttachmentPixel),
 			sol::resolve<Sol::MultipleNumbers<4>(const char*, GLint,GLint, sol::this_state)>(&ReadAttachmentPixel)
 		),
+		"ReadTexel", &ReadTexel,
 
 		"BindEngineModelMeshBuffers", &BindEngineModelMeshBuffers,
 		"UnbindEngineModelMeshBuffers", &UnbindEngineModelMeshBuffers,
