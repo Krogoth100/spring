@@ -3,7 +3,6 @@
 #include "lib/sol2/sol.hpp"
 
 #include "Rendering/GL/myGL.h"
-#include "Rendering/GL/SubState.h"
 #include "Rendering/GL/XBO.h"
 #include "Rendering/Textures/TextureFormat.h"
 #include "Rendering/Models/3DModelVAO.h"
@@ -15,8 +14,6 @@
 #include "Helpers/Sol.h"
 
 #include <utility>
-
-using namespace GL::State;
 
 
 ///////////////////////////////////////////////////////////////////
@@ -95,85 +92,6 @@ void ClearBuffer(const char* slot, SOL_OPTIONAL_4(Sol::Number, r,g,b,a), sol::th
 }
 
 
-namespace Impl {
-	template<class Type>
-	inline Sol::MultipleNumbers<4> ReadPixelResult(GLint x, GLint y, GLenum format, GLenum readType) {
-		Type values[4];
-		glReadPixels(x, y, 1, 1, format, readType, values);
-		return Sol::MultipleNumbers<4>(values[0],values[1],values[2],values[3]);
-	}
-
-	template<class Type>
-	inline Sol::MultipleNumbers<4> ReadTexelResult(GLuint textureId, GLint x, GLint y, GLint z, GLenum format, GLenum readType) {
-		Type values[4];
-		glGetTextureSubImage(textureId, 0, x,y,z, 1,1,1, format, readType, sizeof(Type)*4, values);
-		return Sol::MultipleNumbers<4>(values[0],values[1],values[2],values[3]);
-	}
-
-	Sol::MultipleNumbers<4> ReadAttachmentPixel(GLenum attachment, GLint x, GLint y, sol::this_state& lua)
-	{
-		const auto activeLuaFBO = CLuaHandle::GetActiveFBOs(lua).GetActiveReadFBO();
-		assert(activeLuaFBO);
-		const GLenum internalFormat = activeLuaFBO->GetAttachmentFormat(attachment);
-		const GLenum format = GL::GetInternalFormatDataFormat(internalFormat);
-		const GLenum readType = GL::GetInternalFormatUserType(internalFormat);
-
-		auto state = GL::SubState(ReadBuffer(attachment));
-
-		switch(readType) {
-		case GL_FLOAT:          return Impl::ReadPixelResult<GLfloat> (x, y, format, readType);
-		case GL_HALF_FLOAT:     return Impl::ReadPixelResult<GLhalf>  (x, y, format, readType);
-		case GL_INT:            return Impl::ReadPixelResult<GLint>   (x, y, format, readType);
-		case GL_SHORT:          return Impl::ReadPixelResult<GLshort> (x, y, format, readType);
-		case GL_BYTE:           return Impl::ReadPixelResult<GLbyte>  (x, y, format, readType);
-		case GL_UNSIGNED_INT:   return Impl::ReadPixelResult<GLuint>  (x, y, format, readType);
-		case GL_UNSIGNED_SHORT: return Impl::ReadPixelResult<GLushort>(x, y, format, readType);
-		case GL_UNSIGNED_BYTE:  return Impl::ReadPixelResult<GLubyte> (x, y, format, readType);
-		}
-
-		return Sol::MultipleNumbers<4>(0,0,0,0);
-	}
-}
-
-/* Lua */
-Sol::MultipleNumbers<4> ReadAttachmentPixel(sol::optional<GLenum> slot_, GLint x, GLint y, sol::this_state lua)
-{
-	const GLenum slot = slot_.value_or(1);
-	assert(slot >= 1);
-
-	return Impl::ReadAttachmentPixel(GL_COLOR_ATTACHMENT0 +slot -1, x,y, lua);
-}
-
-/* Lua */
-Sol::MultipleNumbers<4> ReadAttachmentPixel(const char* slot, GLint x, GLint y, sol::this_state lua)
-{
-	assert(hashString(slot) == hashString("depth"));
-
-	return Impl::ReadAttachmentPixel(GL_DEPTH_ATTACHMENT, x,y, lua);
-}
-
-/* Lua */
-Sol::MultipleNumbers<4> ReadTexel(GLuint textureId, GLenum internalFormat, GLint x, GLint y, sol::optional<GLint> z_)
-{
-	const GLint z = z_.value_or(0);
-	const GLenum format = GL::GetInternalFormatDataFormat(internalFormat);
-	const GLenum readType = GL::GetInternalFormatUserType(internalFormat);
-
-	switch(readType) {
-	case GL_FLOAT:          return Impl::ReadTexelResult<GLfloat> (textureId, x, y, z, format, readType);
-	case GL_HALF_FLOAT:     return Impl::ReadTexelResult<GLhalf>  (textureId, x, y, z, format, readType);
-	case GL_INT:            return Impl::ReadTexelResult<GLint>   (textureId, x, y, z, format, readType);
-	case GL_SHORT:          return Impl::ReadTexelResult<GLshort> (textureId, x, y, z, format, readType);
-	case GL_BYTE:           return Impl::ReadTexelResult<GLbyte>  (textureId, x, y, z, format, readType);
-	case GL_UNSIGNED_INT:   return Impl::ReadTexelResult<GLuint>  (textureId, x, y, z, format, readType);
-	case GL_UNSIGNED_SHORT: return Impl::ReadTexelResult<GLushort>(textureId, x, y, z, format, readType);
-	case GL_UNSIGNED_BYTE:  return Impl::ReadTexelResult<GLubyte> (textureId, x, y, z, format, readType);
-	}
-
-	return Sol::MultipleNumbers<4>(0,0,0,0);
-}
-
-
 ///////////////////////////////////////////////////////////////////
 //
 //  Mesh Buffers
@@ -227,11 +145,47 @@ sol::optional<int> GetFeatureDefModelIndexStart(int featureDefID)
 	return model->indxStart;
 }
 
+
+///////////////////////////////////////////////////////////////////
+//
+//  Samplers / Textures
+
+
 /* Lua */
 void BindSampler(GLenum slot, GLenum target, GLuint textureId)
 {
 	glActiveTexture(GL_TEXTURE0+slot);
 	glBindTexture(target, textureId);
+}
+
+namespace Impl {
+	template<class Type>
+	inline Sol::MultipleNumbers<4> ReadTexelResult(GLuint textureId, GLint mip, GLint x, GLint y, GLint z, GLenum format, GLenum readType) {
+		Type values[4];
+		glGetTextureSubImage(textureId, mip, x,y,z, 1,1,1, format, readType, sizeof(Type)*4, values);
+		return Sol::MultipleNumbers<4>(values[0],values[1],values[2],values[3]);
+	}
+}
+
+/* Lua */
+Sol::MultipleNumbers<4> ReadTexel(GLuint textureId, GLenum internalFormat, GLint mip, GLint x, GLint y, sol::optional<GLint> z_)
+{
+	const GLint z = z_.value_or(0);
+	const GLenum format = GL::GetInternalFormatDataFormat(internalFormat);
+	const GLenum readType = GL::GetInternalFormatUserType(internalFormat);
+
+	switch(readType) {
+	case GL_FLOAT:          return Impl::ReadTexelResult<GLfloat> (textureId, mip, x, y, z, format, readType);
+	case GL_HALF_FLOAT:     return Impl::ReadTexelResult<GLhalf>  (textureId, mip, x, y, z, format, readType);
+	case GL_INT:            return Impl::ReadTexelResult<GLint>   (textureId, mip, x, y, z, format, readType);
+	case GL_SHORT:          return Impl::ReadTexelResult<GLshort> (textureId, mip, x, y, z, format, readType);
+	case GL_BYTE:           return Impl::ReadTexelResult<GLbyte>  (textureId, mip, x, y, z, format, readType);
+	case GL_UNSIGNED_INT:   return Impl::ReadTexelResult<GLuint>  (textureId, mip, x, y, z, format, readType);
+	case GL_UNSIGNED_SHORT: return Impl::ReadTexelResult<GLushort>(textureId, mip, x, y, z, format, readType);
+	case GL_UNSIGNED_BYTE:  return Impl::ReadTexelResult<GLubyte> (textureId, mip, x, y, z, format, readType);
+	}
+
+	return Sol::MultipleNumbers<4>(0,0,0,0);
 }
 
 
@@ -248,18 +202,14 @@ bool LuaNewGL::PushEntries(lua_State* L)
 			sol::resolve<void(sol::optional<GLenum>, SOL_OPTIONAL_TYPE_4(Sol::Number), sol::this_state)>(&ClearBuffer),
 			sol::resolve<void(const char*, SOL_OPTIONAL_TYPE_4(Sol::Number), sol::this_state)>(&ClearBuffer)
 		),
-		"ReadAttachmentPixel", sol::overload(
-			sol::resolve<Sol::MultipleNumbers<4>(sol::optional<GLenum>, GLint,GLint, sol::this_state)>(&ReadAttachmentPixel),
-			sol::resolve<Sol::MultipleNumbers<4>(const char*, GLint,GLint, sol::this_state)>(&ReadAttachmentPixel)
-		),
-		"ReadTexel", &ReadTexel,
 
 		"BindEngineModelMeshBuffers", &BindEngineModelMeshBuffers,
 		"UnbindEngineModelMeshBuffers", &UnbindEngineModelMeshBuffers,
 		"GetUnitDefModelIndexStart", &GetUnitDefModelIndexStart,
 		"GetFeatureDefModelIndexStart", &GetFeatureDefModelIndexStart,
 
-		"BindSampler", &BindSampler
+		"BindSampler", &BindSampler,
+		"ReadTexel", &ReadTexel
 	);
 
 #if defined(__GNUG__) && defined(_DEBUG)
