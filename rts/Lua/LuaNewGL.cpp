@@ -148,8 +148,44 @@ sol::optional<int> GetFeatureDefModelIndexStart(int featureDefID)
 
 ///////////////////////////////////////////////////////////////////
 //
-//  Samplers / Textures
+//  Textures / Samplers
 
+
+namespace Impl {
+	template<class Type>
+	inline void ClearTexture(GLuint textureId, GLint mip, GLenum format, GLenum dataType, SOL_OPTIONAL_4(Sol::Number, r,g,b,a)) {
+		Type values[4];
+		values[0] = spring::SafeCast<Type>(r.value_or(0));
+		values[1] = spring::SafeCast<Type>(g.value_or(0));
+		values[2] = spring::SafeCast<Type>(b.value_or(0));
+		values[3] = spring::SafeCast<Type>(a.value_or(0));
+		glClearTexImage(textureId, mip, format, dataType, values);
+	}
+}
+
+/* Lua */
+void ClearTexture(GLuint textureId, GLenum internalFormat, GLint mip, SOL_OPTIONAL_4(Sol::Number, r,g,b,a))
+{
+	const GLenum format = GL::GetInternalFormatDataFormat(internalFormat);
+	const GLenum dataType = GL::GetInternalFormatUserType(internalFormat);
+
+	switch(dataType) {
+	case GL_FLOAT:          Impl::ClearTexture<GLfloat> (textureId, mip, format, dataType, r,g,b,a); break;
+	case GL_HALF_FLOAT:     Impl::ClearTexture<GLhalf>  (textureId, mip, format, dataType, r,g,b,a); break;
+	case GL_INT:            Impl::ClearTexture<GLint>   (textureId, mip, format, dataType, r,g,b,a); break;
+	case GL_SHORT:          Impl::ClearTexture<GLshort> (textureId, mip, format, dataType, r,g,b,a); break;
+	case GL_BYTE:           Impl::ClearTexture<GLbyte>  (textureId, mip, format, dataType, r,g,b,a); break;
+	case GL_UNSIGNED_INT:   Impl::ClearTexture<GLuint>  (textureId, mip, format, dataType, r,g,b,a); break;
+	case GL_UNSIGNED_SHORT: Impl::ClearTexture<GLushort>(textureId, mip, format, dataType, r,g,b,a); break;
+	case GL_UNSIGNED_BYTE:  Impl::ClearTexture<GLubyte> (textureId, mip, format, dataType, r,g,b,a); break;
+	}
+}
+
+/* Lua */
+void GenTextureMips(GLuint textureId)
+{
+	glGenerateTextureMipmap(textureId);
+}
 
 /* Lua */
 void BindSampler(GLenum slot, GLenum target, GLuint textureId)
@@ -208,6 +244,8 @@ bool LuaNewGL::PushEntries(lua_State* L)
 		"GetUnitDefModelIndexStart", &GetUnitDefModelIndexStart,
 		"GetFeatureDefModelIndexStart", &GetFeatureDefModelIndexStart,
 
+		"ClearTexture", &ClearTexture,
+		"GenTextureMips", &GenTextureMips,
 		"BindSampler", &BindSampler,
 		"ReadTexel", &ReadTexel
 	);
