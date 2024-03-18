@@ -155,6 +155,54 @@ sol::optional<int> GetFeatureDefModelIndexStart(int featureDefID)
 
 ///////////////////////////////////////////////////////////////////
 //
+//  Write Control
+
+
+/* Lua */
+void DepthWrite(sol::optional<bool> enabled)
+{
+	glDepthMask((GLboolean) enabled.value_or(true));
+}
+
+/* Lua */
+void ColorWrite(sol::optional<bool> enabled)
+{
+	GLboolean glEnabled = (GLboolean) enabled.value_or(true);
+	glColorMask(glEnabled, glEnabled, glEnabled, glEnabled);
+}
+
+/* Lua */
+void ColorWrite(GLboolean c1, SOL_OPTIONAL_3(GLboolean, c2,c3,c4))
+{
+	GLboolean mask[5] {GL_FALSE};
+		mask[c1]             = GL_TRUE;
+		mask[c2.value_or(0)] = GL_TRUE;
+		mask[c3.value_or(0)] = GL_TRUE;
+		mask[c4.value_or(0)] = GL_TRUE;
+	glColorMask(mask[1], mask[2], mask[3], mask[4]);
+}
+
+/* Lua */
+void SlotColorWrite(GLuint slot, sol::optional<bool> enabled)
+{
+	GLboolean glEnabled = (GLboolean) enabled.value_or(true);
+	glColorMaski(slot-1, glEnabled, glEnabled, glEnabled, glEnabled);
+}
+
+/* Lua */
+void SlotColorWrite(GLuint slot, GLboolean c1, SOL_OPTIONAL_3(GLboolean, c2,c3,c4))
+{
+	GLboolean mask[5] {GL_FALSE};
+		mask[c1]             = GL_TRUE;
+		mask[c2.value_or(0)] = GL_TRUE;
+		mask[c3.value_or(0)] = GL_TRUE;
+		mask[c4.value_or(0)] = GL_TRUE;
+	glColorMaski(slot-1, mask[1], mask[2], mask[3], mask[4]);
+}
+
+
+///////////////////////////////////////////////////////////////////
+//
 //  Textures / Samplers
 
 
@@ -265,6 +313,16 @@ bool LuaNewGL::PushEntries(lua_State* L)
 		"UnbindEngineModelMeshBuffers", &UnbindEngineModelMeshBuffers,
 		"GetUnitDefModelIndexStart", &GetUnitDefModelIndexStart,
 		"GetFeatureDefModelIndexStart", &GetFeatureDefModelIndexStart,
+
+		"DepthWrite", &DepthWrite,
+		"ColorWrite", sol::overload(
+			sol::resolve<void(sol::optional<bool>)>(&ColorWrite),
+			sol::resolve<void(GLboolean, SOL_OPTIONAL_TYPE_3(GLboolean))>(&ColorWrite)
+		),
+		"SlotColorWrite", sol::overload(
+			sol::resolve<void(GLuint, sol::optional<bool>)>(&SlotColorWrite),
+			sol::resolve<void(GLuint, GLboolean, SOL_OPTIONAL_TYPE_3(GLboolean))>(&SlotColorWrite)
+		),
 
 		"InvalidateTexContents", &InvalidateTexContents,
 		"ClearTexture", &ClearTexture,
