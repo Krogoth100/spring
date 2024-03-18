@@ -159,6 +159,36 @@ sol::optional<int> GetFeatureDefModelIndexStart(int featureDefID)
 
 
 /* Lua */
+//!enabled not optional, because sol can't deduce
+void Winding(bool enabled)
+{
+	(enabled? glEnable : glDisable)(GL_CULL_FACE);
+}
+
+/* Lua */
+void Winding(GLenum mode)
+{
+	//!optimize
+	glEnable(GL_CULL_FACE);
+	glCullFace(mode);
+}
+
+/* Lua */
+//!enabled not optional, because sol can't deduce
+void Depth(bool enabled)
+{
+	(enabled? glEnable : glDisable)(GL_DEPTH_TEST);
+}
+
+/* Lua */
+void Depth(GLenum mode)
+{
+	//!optimize
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(mode);
+}
+
+/* Lua */
 void DepthWrite(sol::optional<bool> enabled)
 {
 	glDepthMask((GLboolean) enabled.value_or(true));
@@ -198,6 +228,20 @@ void SlotColorWrite(GLuint slot, GLboolean c1, SOL_OPTIONAL_3(GLboolean, c2,c3,c
 		mask[c3.value_or(0)] = GL_TRUE;
 		mask[c4.value_or(0)] = GL_TRUE;
 	glColorMaski(slot-1, mask[1], mask[2], mask[3], mask[4]);
+}
+
+/* Lua */
+void Color()
+{
+	glDisable(GL_BLEND);
+}
+
+/* Lua */
+void Color(GLenum srcBlendFunc, GLenum dstBlendFunc)
+{
+	//!optimize
+	glEnable(GL_BLEND);
+	glBlendFunc(srcBlendFunc, dstBlendFunc);
 }
 
 
@@ -314,6 +358,14 @@ bool LuaNewGL::PushEntries(lua_State* L)
 		"GetUnitDefModelIndexStart", &GetUnitDefModelIndexStart,
 		"GetFeatureDefModelIndexStart", &GetFeatureDefModelIndexStart,
 
+		"Winding", sol::overload(
+			sol::resolve<void(bool)>(&Winding),
+			sol::resolve<void(GLenum)>(&Winding)
+		),
+		"Depth", sol::overload(
+			sol::resolve<void(bool)>(&Depth),
+			sol::resolve<void(GLenum)>(&Depth)
+		),
 		"DepthWrite", &DepthWrite,
 		"ColorWrite", sol::overload(
 			sol::resolve<void(sol::optional<bool>)>(&ColorWrite),
@@ -322,6 +374,10 @@ bool LuaNewGL::PushEntries(lua_State* L)
 		"SlotColorWrite", sol::overload(
 			sol::resolve<void(GLuint, sol::optional<bool>)>(&SlotColorWrite),
 			sol::resolve<void(GLuint, GLboolean, SOL_OPTIONAL_TYPE_3(GLboolean))>(&SlotColorWrite)
+		),
+		"Color", sol::overload(
+			sol::resolve<void()>(&Color),
+			sol::resolve<void(GLenum, GLenum)>(&Color)
 		),
 
 		"InvalidateTexContents", &InvalidateTexContents,
