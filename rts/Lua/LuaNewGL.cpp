@@ -177,7 +177,12 @@ void Winding(GLenum mode)
 //!enabled not optional, because sol can't deduce
 void Depth(bool enabled)
 {
-	(enabled? glEnable : glDisable)(GL_DEPTH_TEST);
+	if (enabled) {
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_ALWAYS);
+	} else {
+		glDisable(GL_DEPTH_TEST);
+	}
 }
 
 /* Lua */
@@ -261,32 +266,24 @@ void SlotColor(GLuint slot, GLenum srcBlendFunc, GLenum dstBlendFunc)
 /* Lua */
 void ColorOp(sol::optional<GLenum> op)
 {
-	//!optimize
-	glEnable(GL_BLEND);
 	glBlendEquation(op.value_or(GL_FUNC_ADD));
 }
 
 /* Lua */
 void ColorOps(sol::optional<GLenum> rgbOp, sol::optional<GLenum> aOp)
 {
-	//!optimize
-	glEnable(GL_BLEND);
 	glBlendEquationSeparate(rgbOp.value_or(GL_FUNC_ADD), aOp.value_or(GL_FUNC_ADD));
 }
 
 /* Lua */
 void SlotColorOp(GLuint slot, sol::optional<GLenum> op)
 {
-	//!optimize
-	glEnable(GL_BLEND);
 	glBlendEquationi(slot-1, op.value_or(GL_FUNC_ADD));
 }
 
 /* Lua */
 void SlotColorOps(GLuint slot, sol::optional<GLenum> rgbOp, sol::optional<GLenum> aOp)
 {
-	//!optimize
-	glEnable(GL_BLEND);
 	glBlendEquationSeparatei(slot-1, rgbOp.value_or(GL_FUNC_ADD), aOp.value_or(GL_FUNC_ADD));
 }
 
