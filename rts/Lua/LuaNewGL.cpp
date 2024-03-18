@@ -195,6 +195,12 @@ void DepthWrite(sol::optional<bool> enabled)
 }
 
 /* Lua */
+void DepthClamp(sol::optional<bool> enabled)
+{
+	(enabled.value_or(true)? glEnable : glDisable)(GL_DEPTH_CLAMP);
+}
+
+/* Lua */
 void ColorWrite(sol::optional<bool> enabled)
 {
 	GLboolean glEnabled = (GLboolean) enabled.value_or(true);
@@ -250,6 +256,38 @@ void SlotColor(GLuint slot, GLenum srcBlendFunc, GLenum dstBlendFunc)
 	//!optimize
 	glEnable(GL_BLEND);
 	glBlendFunci(slot-1, srcBlendFunc, dstBlendFunc);
+}
+
+/* Lua */
+void ColorOp(sol::optional<GLenum> op)
+{
+	//!optimize
+	glEnable(GL_BLEND);
+	glBlendEquation(op.value_or(GL_FUNC_ADD));
+}
+
+/* Lua */
+void ColorOps(sol::optional<GLenum> rgbOp, sol::optional<GLenum> aOp)
+{
+	//!optimize
+	glEnable(GL_BLEND);
+	glBlendEquationSeparate(rgbOp.value_or(GL_FUNC_ADD), aOp.value_or(GL_FUNC_ADD));
+}
+
+/* Lua */
+void SlotColorOp(GLuint slot, sol::optional<GLenum> op)
+{
+	//!optimize
+	glEnable(GL_BLEND);
+	glBlendEquationi(slot-1, op.value_or(GL_FUNC_ADD));
+}
+
+/* Lua */
+void SlotColorOps(GLuint slot, sol::optional<GLenum> rgbOp, sol::optional<GLenum> aOp)
+{
+	//!optimize
+	glEnable(GL_BLEND);
+	glBlendEquationSeparatei(slot-1, rgbOp.value_or(GL_FUNC_ADD), aOp.value_or(GL_FUNC_ADD));
 }
 
 
@@ -375,6 +413,7 @@ bool LuaNewGL::PushEntries(lua_State* L)
 			sol::resolve<void(GLenum)>(&Depth)
 		),
 		"DepthWrite", &DepthWrite,
+		"DepthClamp", &DepthClamp,
 		"ColorWrite", sol::overload(
 			sol::resolve<void(sol::optional<bool>)>(&ColorWrite),
 			sol::resolve<void(GLboolean, SOL_OPTIONAL_TYPE_3(GLboolean))>(&ColorWrite)
@@ -388,6 +427,10 @@ bool LuaNewGL::PushEntries(lua_State* L)
 			sol::resolve<void(GLenum, GLenum)>(&Color)
 		),
 		"SlotColor", &SlotColor,
+		"ColorOp", &ColorOp,
+		"ColorOps", &ColorOps,
+		"SlotColorOp", &SlotColorOp,
+		"SlotColorOps", &SlotColorOps,
 
 		"InvalidateTexContents", &InvalidateTexContents,
 		"ClearTexture", &ClearTexture,
