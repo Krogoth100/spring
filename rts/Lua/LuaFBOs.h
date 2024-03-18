@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <cmath>
 
 #include "Rendering/GL/myGL.h"
 
@@ -93,16 +94,24 @@ public:
 	GLsizei xsize;
 	GLsizei ysize;
 	GLsizei zsize;
+	GLsizei attachmentsN = 0;
 private:
 	void Init(lua_State* L);
 	void Free(lua_State* L);
 
 	static constexpr size_t ColorAttachmentsCap = 16;
-	std::array<GLenum, 2+ColorAttachmentsCap> attachmentFormats {0};
+	static constexpr size_t TotalAttachmentsCap = 2+ColorAttachmentsCap;
+	std::array<GLenum, TotalAttachmentsCap> attachments {0};
+	std::array<GLenum, TotalAttachmentsCap> attachmentFormats {0};
 public:
+	inline const GLenum* GetAttachments() const { return attachments.data(); }
 	inline GLenum GetAttachmentFormat(GLenum attachment) const { return attachmentFormats[AttachmentArrayIndex(attachment)]; }
 private:
-	inline void SetAttachmentFormat(GLenum attachment, GLenum format) { attachmentFormats[AttachmentArrayIndex(attachment)] = format; }
+	inline void SetAttachment(GLsizei slot, GLenum attachment, GLenum format) {
+		attachments[slot] = attachment;
+		attachmentsN = std::max(attachmentsN, 1+slot);
+		attachmentFormats[AttachmentArrayIndex(attachment)] = format;
+	}
 
 	static inline size_t AttachmentArrayIndex(GLenum attachment) {
 		assert(attachment == GL_STENCIL_ATTACHMENT

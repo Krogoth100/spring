@@ -91,6 +91,13 @@ void ClearBuffer(const char* slot, SOL_OPTIONAL_4(Sol::Number, r,g,b,a), sol::th
 	Impl::ClearBuffer(isDepth? GL_DEPTH_ATTACHMENT : GL_STENCIL_ATTACHMENT, isDepth? GL_DEPTH : GL_STENCIL, 0, r,g,b,a, lua);
 }
 
+/* Lua */
+void InvalidateFramebuffer(sol::this_state lua)
+{
+	const auto activeLuaFBO = CLuaHandle::GetActiveFBOs(lua).GetActiveDrawFBO();
+	glInvalidateFramebuffer(activeLuaFBO->target, activeLuaFBO->attachmentsN, activeLuaFBO->GetAttachments());
+}
+
 
 ///////////////////////////////////////////////////////////////////
 //
@@ -151,6 +158,12 @@ sol::optional<int> GetFeatureDefModelIndexStart(int featureDefID)
 //  Textures / Samplers
 
 
+/* Lua */
+void InvalidateTexContents(GLuint textureId, GLint mip)
+{
+	glInvalidateTexImage(textureId, mip);
+}
+
 namespace Impl {
 	template<class Type>
 	inline void ClearTexture(GLuint textureId, GLint mip, GLenum format, GLenum dataType, SOL_OPTIONAL_4(Sol::Number, r,g,b,a)) {
@@ -182,16 +195,24 @@ void ClearTexture(GLuint textureId, GLenum internalFormat, GLint mip, SOL_OPTION
 }
 
 /* Lua */
+void CopyTexture(GLuint fromTextureId, GLuint toTextureId, GLenum fromTarget, GLenum toTarget, GLint fromMip, GLint toMip, GLsizei width, GLsizei height, GLsizei depth)
+{
+	glCopyImageSubData(
+		fromTextureId, fromTarget, fromMip, 0, 0, 0,
+		toTextureId, toTarget, toMip, 0, 0, 0,
+		width, height, depth);
+}
+
+/* Lua */
 void GenTextureMips(GLuint textureId)
 {
 	glGenerateTextureMipmap(textureId);
 }
 
 /* Lua */
-void BindSampler(GLenum slot, GLenum target, GLuint textureId)
+void BindSampler(GLenum slot, GLuint textureId)
 {
-	glActiveTexture(GL_TEXTURE0+slot);
-	glBindTexture(target, textureId);
+	glBindTextureUnit(slot, textureId);
 }
 
 namespace Impl {
@@ -238,13 +259,16 @@ bool LuaNewGL::PushEntries(lua_State* L)
 			sol::resolve<void(sol::optional<GLenum>, SOL_OPTIONAL_TYPE_4(Sol::Number), sol::this_state)>(&ClearBuffer),
 			sol::resolve<void(const char*, SOL_OPTIONAL_TYPE_4(Sol::Number), sol::this_state)>(&ClearBuffer)
 		),
+		"InvalidateFramebuffer", &InvalidateFramebuffer,
 
 		"BindEngineModelMeshBuffers", &BindEngineModelMeshBuffers,
 		"UnbindEngineModelMeshBuffers", &UnbindEngineModelMeshBuffers,
 		"GetUnitDefModelIndexStart", &GetUnitDefModelIndexStart,
 		"GetFeatureDefModelIndexStart", &GetFeatureDefModelIndexStart,
 
+		"InvalidateTexContents", &InvalidateTexContents,
 		"ClearTexture", &ClearTexture,
+		"CopyTexture", &CopyTexture,
 		"GenTextureMips", &GenTextureMips,
 		"BindSampler", &BindSampler,
 		"ReadTexel", &ReadTexel

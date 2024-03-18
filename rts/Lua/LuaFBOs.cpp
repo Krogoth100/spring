@@ -284,7 +284,7 @@ bool LuaFBOs::AttachObject(
 		fbo->xsize = tex->xsize;
 		fbo->ysize = tex->ysize;
 		fbo->zsize = tex->zsize;
-		fbo->SetAttachmentFormat(attachID, tex->format);
+		fbo->SetAttachment(index, attachID, tex->format);
 		return true;
 	}
 
@@ -302,7 +302,7 @@ bool LuaFBOs::AttachObject(
 	fbo->xsize = rbo->xsize;
 	fbo->ysize = rbo->ysize;
 	fbo->zsize = 0; //RBO can't be 3D or CUBE_MAP
-	fbo->SetAttachmentFormat(attachID, rbo->format);
+	fbo->SetAttachment(index, attachID, rbo->format);
 	return true;
 }
 
