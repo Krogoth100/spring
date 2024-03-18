@@ -244,6 +244,14 @@ void Color(GLenum srcBlendFunc, GLenum dstBlendFunc)
 	glBlendFunc(srcBlendFunc, dstBlendFunc);
 }
 
+/* Lua */
+void SlotColor(GLuint slot, GLenum srcBlendFunc, GLenum dstBlendFunc)
+{
+	//!optimize
+	glEnable(GL_BLEND);
+	glBlendFunci(slot-1, srcBlendFunc, dstBlendFunc);
+}
+
 
 ///////////////////////////////////////////////////////////////////
 //
@@ -379,6 +387,7 @@ bool LuaNewGL::PushEntries(lua_State* L)
 			sol::resolve<void()>(&Color),
 			sol::resolve<void(GLenum, GLenum)>(&Color)
 		),
+		"SlotColor", &SlotColor,
 
 		"InvalidateTexContents", &InvalidateTexContents,
 		"ClearTexture", &ClearTexture,
